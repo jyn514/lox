@@ -9,6 +9,20 @@ import static lox.java.Lox.error;
 import static lox.java.lexer.Token.Type.*;
 
 public class Lexer {
+    private static final Map<Character, Character> escape_characters = new HashMap<>();
+
+    static {
+        escape_characters.put('\'', '\'');
+        escape_characters.put('"', '"');
+        escape_characters.put('\\', '\\');
+        escape_characters.put('0', '\0');
+        escape_characters.put('b', '\b');
+        escape_characters.put('f', '\f');
+        escape_characters.put('n', '\n');
+        escape_characters.put('r', '\r');
+        escape_characters.put('t', '\t');
+    }
+
     private final String source;
     private final List<Token> tokens = new ArrayList<>();
     // current should ONLY be modified by advance() (since it updates column)
@@ -88,26 +102,44 @@ public class Lexer {
 
     private String string () {
         StringBuilder result = new StringBuilder();
+        boolean escaped = false;
 
-        while (!atEnd() && peek() != '"') {
+        while (escaped || peek() != '"') {
             if (peek() == '\n') {
                 error(line++, column, "Unterminated string: expected '\"', got <end of line>");
                 return result.toString();
             }
-            result.append(unescape(advance()));
+            char c = advance();
+            if (escaped) {
+                if (!escape_characters.containsKey(c)) {
+                    error(line, column, "Illegal escape character: " + c);
+                    // treat this as a literal backslash followed by c
+                    result.append("\\");
+                } else {
+                    c = escape_characters.get(c);
+                }
+                escaped = false;
+            } else if (c == '\\') {
+                escaped = true;
+                continue;
+            }
+            result.append(c);
         }
 
         if (atEnd()) {
             error(line, column, "Unterminated string: expected '\"', got <end of file>");
-            return result.toString();
+        } else {
+            advance();  // closing "
         }
+        return result.toString();
+    }
 
         advance();  // closing "
         return source.substring(start + 1, current - 1);
     }
 
     private char peek() {
-        return source.charAt(current);
+        return current >= source.length() ? '\0' : source.charAt(current);
     }
 
     private char advance() {

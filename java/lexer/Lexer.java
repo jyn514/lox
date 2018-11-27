@@ -47,6 +47,9 @@ public class Lexer {
      */
     private Token scanToken() {
         char c = advance();
+        if (isDigit(c) || (c == '.' && isDigit(peek()))) {
+            return makeToken(NUMBER, number());
+        }
         switch (c) {
             case '(': return makeToken(LEFT_PAREN);
             case ')': return makeToken(RIGHT_PAREN);
@@ -134,12 +137,25 @@ public class Lexer {
         return result.toString();
     }
 
-        advance();  // closing "
-        return source.substring(start + 1, current - 1);
+    private double number () {
+        while (isDigit(peek())) advance();
+
+        // only count '.' as part of a number if followed by a digit
+        if (peek() == '.' && isDigit(peekNext())) {
+            // consume the dot
+            advance();
+            while(isDigit(peek())) advance();
+        }
+
+        return Double.parseDouble(source.substring(start, current));
     }
 
     private char peek() {
         return current >= source.length() ? '\0' : source.charAt(current);
+    }
+
+    private char peekNext() {
+        return current + 1 >= source.length() ? '\0' : source.charAt(current + 1);
     }
 
     private char advance() {
@@ -157,6 +173,10 @@ public class Lexer {
 
     private boolean atEnd() {
         return current >= source.length();
+    }
+
+    private boolean isDigit(char c) {
+        return '0' <= c && c <= '9';
     }
 
     private Token makeToken(Token.Type type) {

@@ -10,6 +10,7 @@ import static lox.java.lexer.Token.Type.*;
 
 public class Lexer {
     private static final Map<Character, Character> escape_characters = new HashMap<>();
+    private static final Map<String, Token.Type> keywords = new HashMap<>();
 
     static {
         escape_characters.put('\'', '\'');
@@ -21,6 +22,23 @@ public class Lexer {
         escape_characters.put('n', '\n');
         escape_characters.put('r', '\r');
         escape_characters.put('t', '\t');
+
+        keywords.put("and",    AND);
+        keywords.put("class",  CLASS);
+        keywords.put("else",   ELSE);
+        keywords.put("false",  FALSE);
+        keywords.put("for",    FOR);
+        keywords.put("fun",    FUN);
+        keywords.put("if",     IF);
+        keywords.put("nil",    NIL);
+        keywords.put("or",     OR);
+        keywords.put("print",  PRINT);
+        keywords.put("return", RETURN);
+        keywords.put("super",  SUPER);
+        keywords.put("this",   THIS);
+        keywords.put("true",   TRUE);
+        keywords.put("var",    VAR);
+        keywords.put("while",  WHILE);
     }
 
     private final String source;
@@ -99,6 +117,7 @@ public class Lexer {
                 return makeToken(STRING, string());
 
             default:
+                if (isAlpha(c)) return makeToken(identifier());
                 return handleErrors(c);
         }
     }
@@ -137,7 +156,7 @@ public class Lexer {
         return result.toString();
     }
 
-    private double number () {
+    private double number() {
         while (isDigit(peek())) advance();
 
         // only count '.' as part of a number if followed by a digit
@@ -148,6 +167,14 @@ public class Lexer {
         }
 
         return Double.parseDouble(source.substring(start, current));
+    }
+
+    private Token.Type identifier() {
+        char c;
+        while ((c = peek()) != 0 && (isAlphaNumeric(c) || c == '\'' || c == '?' || c == '_')) {
+            advance();
+        }
+        return keywords.getOrDefault(source.substring(start, current), IDENTIFIER);
     }
 
     private char peek() {
@@ -177,6 +204,14 @@ public class Lexer {
 
     private boolean isDigit(char c) {
         return '0' <= c && c <= '9';
+    }
+
+    private boolean isAlpha(char c) {
+        return ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z');
+    }
+
+    private boolean isAlphaNumeric(char c) {
+        return isDigit(c) || isAlpha(c);
     }
 
     private Token makeToken(Token.Type type) {

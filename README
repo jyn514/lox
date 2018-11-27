@@ -1,0 +1,15 @@
+## Differences from upstream:
+
+### Lexer
+- allows escape characters
+- allows numbers to start with a '.'
+- disallows multi-line strings
+- logs column as well as line number on error
+- logs multiple illegal tokens in a row as a single error
+- adds several operators:
+    - PLUS_EQUAL
+    - PLUS_PLUS
+    - MINUS_EQUAL
+    - MINUS_MINUS
+    - STAR_EQUAL
+    - SLASH_EQUAL

@@ -7,7 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 
 public class Lox {
-    private static boolean hadError = false;
+    private static int errors = 0;
 
     public static void main(String[] args) throws IOException {
         if (args.length > 1) {
@@ -30,14 +30,19 @@ public class Lox {
     }
 
     public static void error(int line, int column, String message) {
-        hadError = true;
+        errors++;
         System.err.println(("" + line) + ':' + column
                 + ": error: " + message);
     }
 
     private static void runFile(String path) throws IOException {
         run(new String(Files.readAllBytes(Paths.get(path))));
-        if (hadError) System.exit(2);
+        if (errors > 0) {
+            System.out.print("" + errors + " error");
+            if (errors > 1) System.out.println('s');
+            else System.out.println();
+            System.exit(2);
+        }
     }
 
     private static void runPrompt() throws IOException {

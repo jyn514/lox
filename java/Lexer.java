@@ -63,6 +63,7 @@ public class Lexer {
      * Returns the next token.
      * If the next token is illegal, or if there is no next token, return null.
      */
+    @SuppressWarnings("fallthrough")
     private Token scanToken() {
         char c = advance();
         if (isDigit(c) || (c == '.' && isDigit(peek()))) {
@@ -220,7 +221,8 @@ public class Lexer {
 
     private Token makeToken(Token.Type type, Object value) {
         flushError();
-        Token result = new Token(type, source.substring(start, current), line, column, value);
+        Token result = new Token(type, source.substring(start, current), line,
+                column - (current - start) + 1, value);
         start = current;
         return result;
     }

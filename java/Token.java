@@ -27,7 +27,7 @@ public class Token {
         LEFT_PAREN, RIGHT_PAREN, LEFT_BRACE, RIGHT_BRACE,
         COMMA, DOT, SEMICOLON,
 
-        // one or two characters
+        // one, two, or three characters
         PLUS, PLUS_EQUAL, PLUS_PLUS,
         MINUS, MINUS_EQUAL, MINUS_MINUS,
         SLASH, SLASH_EQUAL, SLASH_SLASH,

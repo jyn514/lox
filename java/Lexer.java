@@ -1,4 +1,4 @@
-package lox.java.lexer;
+package lox.java;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.HashMap;
 
 import static lox.java.Lox.error;
-import static lox.java.lexer.Token.Type.*;
+import static lox.java.Token.Type.*;
 
 public class Lexer {
     private static final Map<Character, Character> escape_characters = new HashMap<>();

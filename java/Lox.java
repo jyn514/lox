@@ -6,9 +6,6 @@ import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
-import lox.java.lexer.Lexer;
-import lox.java.lexer.Token;
-
 public class Lox {
     private static boolean hadError = false;
 

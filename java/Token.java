@@ -1,4 +1,4 @@
-package lox.java.lexer;
+package lox.java;
 
 public class Token {
     final Type type;

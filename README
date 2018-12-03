@@ -6,10 +6,10 @@
 - disallows multi-line strings
 - logs column as well as line number on error
 - logs multiple illegal tokens in a row as a single error
+- use 'null' instead of 'nil'
+- use 'function' instead of 'fun'
 - adds several operators:
-    - PLUS_EQUAL
-    - PLUS_PLUS
-    - MINUS_EQUAL
-    - MINUS_MINUS
-    - STAR_EQUAL
-    - SLASH_EQUAL
+    - unaries (PLUS_PLUS, MINUS_MINUS)
+    - bitwise functions (PIPE, AMPERSAND, PERCENT, CARET)
+    - enhanced assignment (PLUS_EQUAL, MINUS_EQUAL, STAR_EQUAL, SLASH_EQUAL, DOT_EQUAL, CARET_EQUAL, PERCENT_EQUAL, AMPERSAND_EQUAL)
+

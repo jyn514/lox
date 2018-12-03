@@ -25,7 +25,7 @@ public class Token {
     public enum Type {
         // single characters
         LEFT_PAREN, RIGHT_PAREN, LEFT_BRACE, RIGHT_BRACE,
-        COMMA, DOT, SEMICOLON,
+        COMMA, SEMICOLON,
 
         // one, two, or three characters
         PLUS, PLUS_EQUAL, PLUS_PLUS,
@@ -36,12 +36,17 @@ public class Token {
         EQUAL, EQUAL_EQUAL,
         GREATER, GREATER_EQUAL,
         LESS, LESS_EQUAL,
+        DOT, DOT_EQUAL,
+        CARET, CARET_EQUAL,
+        PERCENT, PERCENT_EQUAL,
+        AMPERSAND, AMPERSAND_EQUAL,
+        PIPE, PIPE_EQUAL,
 
         // literals
         IDENTIFIER, STRING, NUMBER,
 
         // keywords
-        AND, CLASS, ELSE, FALSE, FUN, FOR, IF, NIL, OR,
-        PRINT, RETURN, SUPER, THIS, TRUE, VAR, WHILE,
+        AND, CLASS, ELSE, FALSE, FUNCTION, FOR, IF, NULL, OR,
+        PRINT, RETURN, SUPER, THIS, TRUE, VAR, WHILE, BREAK, CONTINUE,
     }
 }

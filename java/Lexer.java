@@ -28,9 +28,9 @@ public class Lexer {
         keywords.put("else",   ELSE);
         keywords.put("false",  FALSE);
         keywords.put("for",    FOR);
-        keywords.put("fun",    FUN);
+        keywords.put("function", FUNCTION);
         keywords.put("if",     IF);
-        keywords.put("nil",    NIL);
+        keywords.put("null",   NULL);
         keywords.put("or",     OR);
         keywords.put("print",  PRINT);
         keywords.put("return", RETURN);
@@ -39,6 +39,8 @@ public class Lexer {
         keywords.put("true",   TRUE);
         keywords.put("var",    VAR);
         keywords.put("while",  WHILE);
+        keywords.put("break", BREAK);
+        keywords.put("continue", CONTINUE);
     }
 
     private final String source;
@@ -75,9 +77,11 @@ public class Lexer {
             case '{': return makeToken(LEFT_BRACE);
             case '}': return makeToken(RIGHT_BRACE);
             case ',': return makeToken(COMMA);
-            case '.': return makeToken(DOT);
             case ';': return makeToken(SEMICOLON);
 
+            case '.': return makeToken(match('=') ? DOT_EQUAL : DOT);
+            case '^': return makeToken(match('=') ? CARET_EQUAL : CARET);
+            case '%': return makeToken(match('%') ? PERCENT_EQUAL : PERCENT);
             case '!': return makeToken(match('=') ? BANG_EQUAL : BANG);
             case '=': return makeToken(match('=') ? EQUAL_EQUAL : EQUAL);
             case '<': return makeToken(match('=') ? LESS_EQUAL : LESS);
@@ -101,6 +105,8 @@ public class Lexer {
                                        match('+') ? PLUS_PLUS : PLUS);
             case '-': return makeToken(match('=') ? MINUS_EQUAL :
                                        match('-') ? MINUS_MINUS : MINUS);
+            case '&': return makeToken(match('=') ? AMPERSAND_EQUAL : AMPERSAND);
+            case '|': return makeToken(match('=') ? PIPE_EQUAL : PIPE);
 
             // ignore whitespace
             case '\n':

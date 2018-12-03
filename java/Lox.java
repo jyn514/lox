@@ -24,8 +24,10 @@ public class Lox {
     }
 
     public static void run(String input) {
-        for (Token token : new Lexer(input).scanTokens()) {
-            System.out.println(token);
+        // new Interpreter(new Parser(new Lexer(input).scanTokens()).parse());
+        ASTPrinter printer = new ASTPrinter();
+        for (Stmt stmt : new Parser(new Lexer(input).scanTokens()).parse()) {
+            System.out.println(printer.print(stmt));
         }
     }
 

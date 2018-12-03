@@ -13,6 +13,8 @@ java/Stmt.java java/Expr.java: tools/gen_expr.py
 
 java/Parser.class: java/Lexer.java java/Token.java java/LoxType.java
 
+java/Compiler.class java/Interpreter.class java/ASTPrinter.class: java/Parser.java
+
 %.class: %.java
 	$(javac) $<
 

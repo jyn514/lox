@@ -41,6 +41,12 @@ public class Lexer {
         keywords.put("while",  WHILE);
         keywords.put("break", BREAK);
         keywords.put("continue", CONTINUE);
+
+        keywords.put("bool", BOOL);
+        keywords.put("int", INT);
+        keywords.put("double", DOUBLE);
+        keywords.put("string", STRING_TYPE);
+        keywords.put("void", VOID);
     }
 
     private final String source;
@@ -163,17 +169,19 @@ public class Lexer {
         return result.toString();
     }
 
-    private double number() {
+    private Number number() {
         while (isDigit(peek())) advance();
 
         // only count '.' as part of a number if followed by a digit
         if (peek() == '.' && isDigit(peekNext())) {
             // consume the dot
             advance();
-            while(isDigit(peek())) advance();
+            while (isDigit(peek())) advance();
+            return Double.parseDouble(source.substring(start, current));
         }
 
-        return Double.parseDouble(source.substring(start, current));
+        return Integer.parseInt(source.substring(start, current));
+
     }
 
     private Token.Type identifier() {

@@ -48,5 +48,9 @@ public class Token {
         // keywords
         AND, CLASS, ELSE, FALSE, FUNCTION, FOR, IF, NULL, OR,
         PRINT, RETURN, SUPER, THIS, TRUE, VAR, WHILE, BREAK, CONTINUE,
+        VOID,
+
+        // primitive types
+        INT, DOUBLE, BOOL, STRING_TYPE
     }
 }

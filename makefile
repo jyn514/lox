@@ -4,11 +4,14 @@ all: jlox
 
 jlox: | java/Lox.class
 	printf '#!/bin/sh\njava lox.java.Lox "$$@"' > jlox
+	chmod +x jlox
 
 java/Lox.class: $(subst .java,.class,$(shell find java -name "*.java"))
 
 java/Stmt.java java/Expr.java: tools/gen_expr.py
 	$^ java
+
+java/Parser.class: java/Lexer.java java/Token.java java/LoxType.java
 
 %.class: %.java
 	$(javac) $<

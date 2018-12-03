@@ -37,7 +37,7 @@ public class Parser {
 
     /* declaration = funDeclaration | varDeclaration | statement */
     private Stmt declaration() {
-        if (match(INT, BOOL, CHAR, DOUBLE)) {
+        if (match(VOID, INT, BOOL, STRING_TYPE, DOUBLE)) {
             Token id = consume(IDENTIFIER);
             if (match(LEFT_PAREN)) return funDeclaration(id);
             return varDeclaration(id);
@@ -47,19 +47,20 @@ public class Parser {
 
     /* funDeclaration :: type identifier "(" ( type identifier "," )* ") block */
     private Stmt.Function funDeclaration(Token identifier) {
-        Expr.Symbol func = new Expr.Symbol(identifier, previous());
+        Expr.Symbol func = new Expr.Symbol(identifier, LoxType.get(previous().type));
         List<Expr.Symbol> arguments = new ArrayList<>();
-        while (match(INT, BOOL, CHAR, DOUBLE)) {
+        while (match(INT, BOOL, STRING_TYPE, DOUBLE)) {
             Token type = previous();
-            arguments.add(new Expr.Symbol(consume(IDENTIFIER), type));
+            arguments.add(new Expr.Symbol(consume(IDENTIFIER), LoxType.get(type.type)));
         }
         consume(RIGHT_PAREN);
+        consume(LEFT_BRACE);
         return new Stmt.Function(func, arguments, block());
     }
 
     /* varDeclaration ::= type identifier ("=" expression)? ";" */
     private Stmt.Var varDeclaration(Token identifier) {
-        Expr.Symbol variable = new Expr.Symbol(identifier, previous());
+        Expr.Symbol variable = new Expr.Symbol(identifier, LoxType.get(previous().type));
         Expr value = null;
         if (match(EQUAL)) {
             value = expression();
@@ -125,7 +126,7 @@ public class Parser {
 
         consume(LEFT_PAREN);
         if (!match(SEMICOLON)) {
-            if (match(INT, DOUBLE, BOOL, CHAR)) declaration = declaration();
+            if (match(INT, DOUBLE, BOOL, STRING_TYPE)) declaration = declaration();
             else declaration = expressionStatement();
         }
         if (!match(SEMICOLON))

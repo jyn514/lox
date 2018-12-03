@@ -33,21 +33,33 @@ def generate_visitors(basename, types):
                 typename, basename, basename.lower()) for typename in types) +
             "\n    }")
 
+def generate_constructor(classname, fields):
+    ret = """
+        {0}({1}) {{
+{2}
+        }}
+""".format(classname, ', '.join(fields),
+           '\n'.join('            this.' + s.split()[1] + ' = ' + s.split()[1] + ';'
+              for s in fields))
+    for i in range(1, len(fields)):
+        ret += """
+        {0}({1}) {{
+            this({2});
+        }}
+""".format(classname, ', '.join(fields[:i]),
+            ', '.join(s.split()[1] for s in fields[:i] + ["null null"]))
+    return ret
 
 def generate_class(basename, classname, fields, abstract_fields):
     return """\n    static class {1} extends {0} {{
 {2}
-        {1}({3}) {{
-{4}
-        }}
+{3}
         public <T> T accept(Visitor<T> visitor) {{
             return visitor.visit{0}(this);
         }}
     }}""".format(basename, classname,
                 '\n'.join("        final " + s + ";" for s in fields),
-                ', '.join(fields + abstract_fields),
-                '\n'.join('            this.' + s.split()[1] + ' = ' + s.split()[1] + ';'
-                          for s in fields + abstract_fields))
+                generate_constructor(classname, fields + abstract_fields))
 
 def generate(directory, basename, types, abstract_fields):
     with open(os.path.join(directory, basename + '.java'), 'w') as output:

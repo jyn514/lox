@@ -7,6 +7,9 @@ jlox: | java/Lox.class
 
 java/Lox.class: $(subst .java,.class,$(shell find java -name "*.java"))
 
+java/Stmt.java java/Expr.java: tools/gen_expr.py
+	$^ java
+
 %.class: %.java
 	$(javac) $<
 
@@ -22,3 +25,6 @@ debug: java/Lox.class
 .PHONY: clean
 clean:
 	find -name '*.class' -delete -o -name __pycache__ -exec rm -rf {} \;
+
+clobber: clean
+	rm java/Expr.java java/Stmt.java

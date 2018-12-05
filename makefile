@@ -15,7 +15,7 @@ java/Parser.class: java/Lexer.java java/Token.java java/LoxType.java
 
 java/Compiler.class java/Interpreter.class java/ASTPrinter.class: java/Parser.java
 
-%.class: %.java
+%.class: %.java java/Stmt.java java/Expr.java
 	$(javac) $<
 
 .PHONY: run

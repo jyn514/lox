@@ -4,19 +4,6 @@ import lox.java.Token;
 
 public class ASTPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
 
-    // tmp
-    public static void main(String[] args) {
-        Expr expression = new Expr.Binary(
-            new Expr.Unary(
-                new Token(Token.Type.MINUS, "-", 1, 1),
-                new Expr.Literal(123)),
-                new Token(Token.Type.STAR, "*", 1, 1),
-                new Expr.Grouping(
-                new Expr.Literal(45.67)));
-
-        System.out.println(new ASTPrinter().print(expression));
-    }
-
     public String print(Expr expr) {
         return expr.accept(this);
     }

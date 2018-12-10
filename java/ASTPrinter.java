@@ -65,7 +65,8 @@ public class ASTPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
   }
 
   public String visitExpr(Expr.Call expr) {
-    return parenthesize("call", expr.arguments.toArray());
+    return parenthesize("call", expr.callee,
+        expr.arguments == null ? "void" : expr.arguments.toArray());
   }
 
   public String visitExpr(Expr.Logical expr) {
@@ -80,16 +81,28 @@ public class ASTPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
     StringBuilder builder = new StringBuilder();
 
     builder.append('(').append(name).append(' ');
+    parenthesizeHelper(builder, exprs);
+    return builder.append(')').toString();
+  }
+
+  private void parenthesizeHelper(StringBuilder builder, Object ... exprs) {
     for (Object expr : exprs) {
-      builder.append(' ');
       if (expr == null) builder.append("null");
       else if (expr instanceof Stmt)
         builder.append(((Stmt)expr).accept(this));
       else if (expr instanceof Expr)
         builder.append(((Expr)expr).accept(this));
+      else if (expr instanceof String)
+        builder.append(expr);
+      else if (expr.getClass().isArray()) {
+        builder.append("'(");
+        parenthesizeHelper(builder, (Object[])expr);
+        builder.append(')');
+      } else {
+        throw new IllegalArgumentException("Unknown type to print " + expr);
       }
+      builder.append(' ');
     }
-
-    return builder.append(')').toString();
+    builder.deleteCharAt(builder.length() - 1);
   }
 }

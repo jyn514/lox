@@ -1,4 +1,4 @@
-javac = javac -Xlint -g
+javac = javac -Xlint:all -g
 
 all: jlox
 
@@ -24,7 +24,7 @@ run: java/Lox.class
 
 .PHONY: debug
 debug: java/Lox.class
-	@echo run \"jdb -attach 8000\" \"stop in lox.java.Parser.parseExpr\"
+	@echo run \"jdb -attach 8000\" \"stop in lox.java.Annotate.annotate\"
 	java -agentlib:jdwp=transport=dt_socket,server=y,address=8000,suspend=n lox.java.Lox
 
 .PHONY: clean

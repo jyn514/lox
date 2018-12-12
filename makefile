@@ -38,3 +38,5 @@ clean:
 
 clobber: clean
 	rm java/Expr.java java/Stmt.java
+
+include dist/makefile

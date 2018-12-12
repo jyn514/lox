@@ -2,7 +2,8 @@ package lox.java;
 
 public class Token {
   final Type type;
-  final String lexeme;
+  // TODO: should be final, need to find a way to mangle names without changing original
+  String lexeme;
   final Object value;
   final int line, column;
 

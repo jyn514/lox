@@ -8,7 +8,7 @@ import java.util.HashMap;
 import static lox.java.Lox.error;
 import static lox.java.Token.Type.*;
 
-public class Lexer {
+public class Lexer extends Pass<String, List<Token>> {
   private static final Map<Character, Character> escape_characters = new HashMap<>();
   private static final Map<String, Token.Type> keywords = new HashMap<>();
 
@@ -49,17 +49,16 @@ public class Lexer {
     keywords.put("void", VOID);
   }
 
-  private final String source;
   private final List<Token> tokens = new ArrayList<>();
   // current should ONLY be modified by advance() (since it updates column)
   private int start = 0, current = 0, line = 1, column = 0;
   private int errorStart = -1;
 
-  public Lexer(String source) {
-    this.source = source;
+  public Lexer(String input) {
+    super(input);
   }
 
-  public List<Token> scanTokens() {
+  public List<Token> runPass() {
     while (!atEnd()) {
       Token t = scanToken();
       if (t != null) tokens.add(t);
@@ -97,7 +96,7 @@ public class Lexer {
         if (match('/')) {
           flushError();
           while(!atEnd() && advance() != '\n') {}
-          if (source.charAt(current - 1) == '\n') {
+          if (input.charAt(current - 1) == '\n') {
             line++;
             start = current;
             return scanToken();
@@ -177,10 +176,10 @@ public class Lexer {
       // consume the dot
       advance();
       while (isDigit(peek())) advance();
-      return Double.parseDouble(source.substring(start, current));
+      return Double.parseDouble(input.substring(start, current));
     }
 
-    return Integer.parseInt(source.substring(start, current));
+    return Integer.parseInt(input.substring(start, current));
 
   }
 
@@ -189,24 +188,24 @@ public class Lexer {
     while ((c = peek()) != 0 && (isAlphaNumeric(c) || c == '\'' || c == '?' || c == '_')) {
       advance();
     }
-    return keywords.getOrDefault(source.substring(start, current), IDENTIFIER);
+    return keywords.getOrDefault(input.substring(start, current), IDENTIFIER);
   }
 
   private char peek() {
-    return current >= source.length() ? '\0' : source.charAt(current);
+    return current >= input.length() ? '\0' : input.charAt(current);
   }
 
   private char peekNext() {
-    return current + 1 >= source.length() ? '\0' : source.charAt(current + 1);
+    return current + 1 >= input.length() ? '\0' : input.charAt(current + 1);
   }
 
   private char advance() {
     column++;
-    return source.charAt(current++);
+    return input.charAt(current++);
   }
 
   private boolean match(char c) {
-    if (!atEnd() && source.charAt(current) == c) {
+    if (!atEnd() && input.charAt(current) == c) {
       advance();
       return true;
     }
@@ -214,7 +213,7 @@ public class Lexer {
   }
 
   private boolean atEnd() {
-    return current >= source.length();
+    return current >= input.length();
   }
 
   private boolean isDigit(char c) {
@@ -235,7 +234,7 @@ public class Lexer {
 
   private Token makeToken(Token.Type type, Object value) {
     flushError();
-    Token result = new Token(type, source.substring(start, current), line,
+    Token result = new Token(type, input.substring(start, current), line,
         column - (current - start) + 1, value);
     start = current;
     return result;
@@ -244,7 +243,7 @@ public class Lexer {
   private void flushError() {
     if (errorStart != -1) {
       error(line, errorStart, "Illegal token '"
-          + source.substring(errorStart, start) + '\'');
+          + input.substring(errorStart, start) + '\'');
     }
     errorStart = -1;
   }
@@ -253,7 +252,7 @@ public class Lexer {
    * Returns the next valid token, knowing that the character `c` is invalid.
    * If there are no more valid tokens, returns null.
    *
-   * Assumes that `c' came from source[current - 1].
+   * Assumes that `c' came from input[current - 1].
    *
    * No matter how many times it is called,
    * only sends one error per sequence of illegal characters.

@@ -37,7 +37,7 @@ public class ASTPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
   }
 
   public String visitStmt(Stmt.Var stmt) {
-    return parenthesize("var", stmt.identifier, stmt.expression);
+    return parenthesize("var", stmt.identifier, stmt.equals);
   }
 
   public String visitStmt(Stmt.Print stmt) {

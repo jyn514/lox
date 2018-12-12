@@ -1,29 +1,30 @@
 #!/usr/bin/env python3
 
 import os.path
+from re import sub
 
 ALL_TYPES = [
     # expressions
     ("Expr", {
-        "Unary": ["Token operator", "Expr right"],
-        "Binary": ["Expr left", "Token operator", "Expr right"],
-        "Logical": ["Expr left", "Token operator", "Expr right"],
-        "Grouping": ["Expr expression"],
-        "Literal": ["Object value"],
-        "Symbol": ["Token name"],
-        "Assign": ["Expr lvalue", "Token equal", "Expr rvalue"],
-        "Call": ["Expr callee", "Token paren", "List<Expr> arguments"],
+        "Unary": ["final Token operator", "final Expr right"],
+        "Binary": ["final Expr left", "final Token operator", "final Expr right"],
+        "Logical": ["final Expr left", "final Token operator", "final Expr right"],
+        "Grouping": ["final Expr expression"],
+        "Literal": ["final Object value"],
+        "Symbol": ["final Token name", "int arity"],
+        "Assign": ["Expr.Symbol lvalue", "final Token equal", "final Expr rvalue"],
+        "Call": ["Expr.Symbol callee", "final Token paren", "final List<Expr> arguments"],
     }, ["LoxType type"]),
     # statements
     ("Stmt", {
-        "Expression": ["Expr expression"],
-        "Print": ["Expr expression"],
-        "Var": ["Expr.Symbol identifier", "Expr expression"],
-        "Block": ["List<Stmt> statements"],
-        "If": ["Expr condition", "Stmt then", "Stmt otherwise"],
-        "While": ["Expr condition", "Stmt body"],
-        "LoopControl": ["Token keyword"],
-        "Function": ["Expr.Symbol identifier", "List<Expr.Symbol> arguments", "Stmt.Block body"],
+        "Expression": ["final Expr expression"],
+        "Print": ["final Expr expression"],
+        "Var": ["Expr.Symbol identifier", "final Expr.Assign equals"],
+        "Block": ["final List<Stmt> statements"],
+        "If": ["final Expr condition", "final Stmt then", "final Stmt otherwise"],
+        "While": ["final Expr condition", "final Stmt body"],
+        "LoopControl": ["final Token keyword"],
+        "Function": ["Expr.Symbol identifier", "final List<Expr.Symbol> arguments", "final Stmt.Block body"],
     }, [])
 ]
 
@@ -34,13 +35,14 @@ def generate_visitors(basename, types):
             "\n    }")
 
 def generate_constructor(classname, fields):
-    ret = """
-        {0}({1}) {{
+    return """
+    {0}({1}) {{
 {2}
-        }}
-""".format(classname, ', '.join(fields),
-           '\n'.join('            this.' + s.split()[1] + ' = ' + s.split()[1] + ';'
+    }}
+""".format(classname, ', '.join(sub('^final ', '', f) for f in fields),
+           '\n'.join('      this.' + s.split()[-1] + ' = ' + s.split()[-1] + ';'
               for s in fields))
+    ''' default constructors
     for i in range(1, len(fields)):
         ret += """
         {0}({1}) {{
@@ -48,7 +50,7 @@ def generate_constructor(classname, fields):
         }}
 """.format(classname, ', '.join(fields[:i]),
             ', '.join(s.split()[1] for s in fields[:i] + ["null null"]))
-    return ret
+    '''
 
 def generate_class(basename, classname, fields, abstract_fields):
     return """\n    static class {1} extends {0} {{

@@ -1,6 +1,8 @@
 package lox.java;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.EOFException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -22,9 +24,13 @@ public class Lox {
       System.exit(1);
     }
     if (args.length == 1) {
-      runFile(args[0]);
+      try {
+        runFile(new String(Files.readAllBytes(Paths.get(args[0]))));
+      } catch (NoSuchFileException e) {
+        System.err.println("File not found: " + args[0]);
+      }
     } else if (System.console() == null) {
-      runFile("/dev/stdin");
+      runFile(streamToString(System.in));
     } else {
       runPrompt();
     }
@@ -43,6 +49,17 @@ public class Lox {
         System.exit(5);
       }
     }
+  }
+
+  private static String streamToString(InputStream inputStream) throws IOException {
+    // https://stackoverflow.com/questions/309424/
+    ByteArrayOutputStream result = new ByteArrayOutputStream();
+    byte[] buffer = new byte[1024];
+    int length;
+    while ((length = inputStream.read(buffer)) != -1) {
+        result.write(buffer, 0, length);
+    }
+    return result.toString();
   }
 
   private static Pass<?, ?> getInstance(Class<? extends Pass<?, ?>> pass, Object input)
@@ -70,12 +87,8 @@ public class Lox {
         + ": error: " + message);
   }
 
-  private static void runFile(String path) throws IOException {
-    try {
-      run(new String(Files.readAllBytes(Paths.get(path))));
-    } catch (NoSuchFileException e) {
-      System.err.println("File not found: " + path);
-    }
+  private static void runFile(String input) throws IOException {
+    run(input);
     if (errors > 0) {
       System.err.print("" + errors + " error");
       if (errors > 1) System.err.println('s');

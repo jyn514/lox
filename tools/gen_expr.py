@@ -29,10 +29,10 @@ ALL_TYPES = [
 ]
 
 def generate_visitors(basename, types):
-    return ("\n    interface Visitor<T> {\n" +
-            "\n".join("        T visit{1}({0} {2});".format(
+    return ("\n  interface Visitor<T> {\n" +
+            "\n".join("    T visit{1}({0} {2});\n".format(
                 typename, basename, basename.lower()) for typename in types) +
-            "\n    }")
+            "\n  }")
 
 def generate_constructor(classname, fields):
     return """
@@ -53,14 +53,14 @@ def generate_constructor(classname, fields):
     '''
 
 def generate_class(basename, classname, fields, abstract_fields):
-    return """\n    static class {1} extends {0} {{
+    return """\n  static class {1} extends {0} {{
 {2}
 {3}
-        public <T> T accept(Visitor<T> visitor) {{
-            return visitor.visit{0}(this);
-        }}
-    }}""".format(basename, classname,
-                '\n'.join("        final " + s + ";" for s in fields),
+    public <T> T accept(Visitor<T> visitor) {{
+      return visitor.visit{0}(this);
+    }}
+  }}\n""".format(basename, classname,
+                '\n'.join("    " + s + ";" for s in fields),
                 generate_constructor(classname, fields + abstract_fields))
 
 def generate(directory, basename, types, abstract_fields):
@@ -70,9 +70,9 @@ def generate(directory, basename, types, abstract_fields):
 import java.util.List;
 
 abstract class {0} {{
-    {1}
-    abstract <T> T accept(Visitor<T> visitor);
-""".format(basename, '\n'.join(field + ';' for field in abstract_fields))
+{1}
+  abstract <T> T accept(Visitor<T> visitor);
+""".format(basename, '\n'.join('  ' + field + ';' for field in abstract_fields))
         output.write(base)
         for classname, fields in types.items():
             output.write(generate_class(basename, classname, fields, abstract_fields))

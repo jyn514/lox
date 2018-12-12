@@ -1,0 +1,8 @@
+print "hi";
+print 12;
+print 1.12;
+print null;
+print "null";
+print true;
+print false;
+print "";

@@ -1,0 +1,4 @@
+print "s" or 3;
+print true and 2;
+print 3.2 & 32;
+print null % 42;

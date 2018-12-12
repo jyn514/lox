@@ -19,6 +19,10 @@ java/Compiler.class java/Interpreter.class java/ASTPrinter.class: java/Parser.ja
 %.class: %.java java/Stmt.java java/Expr.java
 	javac $(JAVACFLAGS) $<
 
+.PHONY: test
+test: java/Lox.class
+	test/test.sh
+
 .PHONY: run
 run: java/Lox.class
 	java $(JAVAFLAGS) lox.java.Lox

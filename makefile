@@ -40,3 +40,5 @@ clean:
 
 clobber: clean
 	rm lox/java/Expr.java lox/java/Stmt.java
+
+include dist/makefile

@@ -1,3 +1,5 @@
 jlox
 java/Stmt.java
 java/Expr.java
+dist/Manifest
+dist/lox.jar

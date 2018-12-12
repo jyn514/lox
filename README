@@ -1,3 +1,8 @@
+## Dependencies
+- Java 9+ (because Map.of is too nice to live without)
+- llvm or at least lli
+- libreadline (?) java is packaged but not sure if that includes the JNI extension
+
 ## Differences from upstream:
 
 ### Lexer

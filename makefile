@@ -1,4 +1,5 @@
-javac = javac -Xlint:all -g
+JAVAFLAGS = -cp .:libreadline-java.jar
+JAVACFLAGS = $(JAVAFLAGS) -Xlint:all -g
 
 all: jlox
 
@@ -16,16 +17,16 @@ java/Parser.class: java/Lexer.java java/Token.java java/LoxType.java
 java/Compiler.class java/Interpreter.class java/ASTPrinter.class: java/Parser.java
 
 %.class: %.java java/Stmt.java java/Expr.java
-	$(javac) $<
+	javac $(JAVACFLAGS) $<
 
 .PHONY: run
 run: java/Lox.class
-	java lox.java.Lox
+	java $(JAVAFLAGS) lox.java.Lox
 
 .PHONY: debug
 debug: java/Lox.class
-	@echo run \"jdb -attach 8000\" \"stop in lox.java.Annotate.annotate\"
-	java -agentlib:jdwp=transport=dt_socket,server=y,address=8000,suspend=n lox.java.Lox
+	@echo run \"jdb -attach 8000\" \"stop in lox.java.Compiler.runPass\(\)\"
+	java $(JAVAFLAGS) -agentlib:jdwp=transport=dt_socket,server=y,address=8000,suspend=n lox.java.Lox
 
 .PHONY: clean
 clean:

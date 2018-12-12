@@ -1,10 +1,14 @@
 package lox.java;
 
 import java.io.IOException;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
+import java.io.EOFException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.nio.file.NoSuchFileException;
+import java.util.List;
+
+import org.gnu.readline.Readline;
+import org.gnu.readline.ReadlineLibrary;
 
 public class Lox {
   private static int errors = 0;
@@ -38,23 +42,36 @@ public class Lox {
   }
 
   private static void runFile(String path) throws IOException {
-    run(new String(Files.readAllBytes(Paths.get(path))));
+    try {
+      run(new String(Files.readAllBytes(Paths.get(path))));
+    } catch (NoSuchFileException e) {
+      System.err.println("File not found: " + path);
+    }
     if (errors > 0) {
-      System.out.print("" + errors + " error");
-      if (errors > 1) System.out.println('s');
-      else System.out.println();
+      System.err.print("" + errors + " error");
+      if (errors > 1) System.err.println('s');
+      else System.err.println();
       System.exit(2);
     }
   }
 
   private static void runPrompt() throws IOException {
-    BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-
-    System.out.print("> ");
-    String input;
-    while ((input = reader.readLine()) != null) {
-      run(input);
-      System.out.print("> ");
+    Readline.load(ReadlineLibrary.GnuReadline);
+    Readline.initReadline("Lox");
+    Runtime.getRuntime().addShutdownHook(new Thread() {
+      public void run() {
+        Readline.cleanup();
+      }
+    });
+    while (true) {
+      try {
+        String input = Readline.readline("> ");
+        if (input != null) run(input);
+      } catch (EOFException e) {
+        break;
+      }
+      errors = 0;
     }
+    System.out.println();
   }
 }

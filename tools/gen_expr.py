@@ -28,11 +28,13 @@ ALL_TYPES = [
     }, [])
 ]
 
+
 def generate_visitors(basename, types):
     return ("\n  interface Visitor<T> {\n" +
             "\n".join("    T visit{1}({0} {2});\n".format(
                 typename, basename, basename.lower()) for typename in types) +
             "\n  }")
+
 
 def generate_constructor(classname, fields):
     return """
@@ -41,16 +43,8 @@ def generate_constructor(classname, fields):
     }}
 """.format(classname, ', '.join(sub('^final ', '', f) for f in fields),
            '\n'.join('      this.' + s.split()[-1] + ' = ' + s.split()[-1] + ';'
-              for s in fields))
-    ''' default constructors
-    for i in range(1, len(fields)):
-        ret += """
-        {0}({1}) {{
-            this({2});
-        }}
-""".format(classname, ', '.join(fields[:i]),
-            ', '.join(s.split()[1] for s in fields[:i] + ["null null"]))
-    '''
+                     for s in fields))
+
 
 def generate_class(basename, classname, fields, abstract_fields):
     return """\n  static class {1} extends {0} {{
@@ -60,8 +54,9 @@ def generate_class(basename, classname, fields, abstract_fields):
       return visitor.visit{0}(this);
     }}
   }}\n""".format(basename, classname,
-                '\n'.join("    " + s + ";" for s in fields),
-                generate_constructor(classname, fields + abstract_fields))
+                 '\n'.join("    " + s + ";" for s in fields),
+                 generate_constructor(classname, fields + abstract_fields))
+
 
 def generate(directory, basename, types, abstract_fields):
     with open(os.path.join(directory, basename + '.java'), 'w') as output:
@@ -87,6 +82,7 @@ def main():
     args = parser.parse_args()
     for types in ALL_TYPES:
         generate(args.directory, *types)
+
 
 if __name__ == '__main__':
     main()

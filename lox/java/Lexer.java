@@ -95,7 +95,7 @@ public class Lexer extends Pass<String, List<Token>> {
       case '/':
         if (match('/')) {
           flushError();
-          while(!atEnd() && advance() != '\n') {}
+          while(!atEnd() && advance() != '\n');
           if (input.charAt(current - 1) == '\n') {
             line++;
             start = current;

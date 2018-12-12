@@ -30,7 +30,7 @@ public class Lox {
     }
   }
 
-  public static void run(String input) {
+  private static void run(String input) {
     // this definitely isn't horrifying at all
     Object result = input;
     for (Class<? extends Pass<?, ?>> pass : passes) {
@@ -56,13 +56,15 @@ public class Lox {
       for (Class<?> interfac : clazz.getInterfaces()) {
         try {
           return pass.getDeclaredConstructor(interfac).newInstance(input);
-        } catch (NoSuchMethodException f) {}
+        } catch (NoSuchMethodException f) {
+          // this isn't thrown until we get to the end
+        }
       }
       throw new NoSuchMethodException("Could not find a matching method");
     }
   }
 
-  public static void error(int line, int column, String message) {
+  static void error(int line, int column, String message) {
     errors++;
     System.err.println(("" + line) + ':' + column
         + ": error: " + message);
@@ -85,11 +87,7 @@ public class Lox {
   private static void runPrompt() throws IOException {
     Readline.load(ReadlineLibrary.GnuReadline);
     Readline.initReadline("Lox");
-    Runtime.getRuntime().addShutdownHook(new Thread() {
-      public void run() {
-        Readline.cleanup();
-      }
-    });
+    Runtime.getRuntime().addShutdownHook(new Thread(Readline::cleanup));
     while (true) {
       try {
         String input = Readline.readline("> ");

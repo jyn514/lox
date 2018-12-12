@@ -1,7 +1,5 @@
 package lox.java;
 
-import lox.java.Token;
-
 public class ASTPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
 
   public String print(Expr expr) {

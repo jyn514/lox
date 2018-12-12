@@ -20,15 +20,6 @@ enum LoxType {
       return result;
   }
 
-  public static boolean isType(LoxType type, LoxType ... options) {
-    for (LoxType option : options) {
-      if (type == option) {
-        return true;
-      }
-    }
-    return false;
-  }
-
   /*
    * Comparing ERROR or UNDEFINED will throw a type error.
    * Comparing incompatible types (e.g. STRING, INT) will throw a type error.

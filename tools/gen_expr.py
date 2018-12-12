@@ -53,6 +53,9 @@ def generate_class(basename, classname, fields, abstract_fields):
     public <T> T accept(Visitor<T> visitor) {{
       return visitor.visit{0}(this);
     }}
+    public String toString() {{
+      return printer.print(this);
+    }}
   }}\n""".format(basename, classname,
                  '\n'.join("    " + s + ";" for s in fields),
                  generate_constructor(classname, fields + abstract_fields))
@@ -65,6 +68,7 @@ def generate(directory, basename, types, abstract_fields):
 import java.util.List;
 
 abstract class {0} {{
+  private static final ASTPrinter printer = new ASTPrinter();
 {1}
   abstract <T> T accept(Visitor<T> visitor);
 """.format(basename, '\n'.join('  ' + field + ';' for field in abstract_fields))

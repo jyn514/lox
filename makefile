@@ -1,10 +1,10 @@
-export CLASSPATH = .:libreadline-java.jar
+export CLASSPATH = .$(shell ./sep.sh)libreadline-java.jar
 JAVACFLAGS = -Xlint:all -g
 
 all: jlox
 
 jlox: | lox/java/Lox.class
-	printf '#!/bin/sh\njava lox.java.Lox "$$@"' > jlox
+	printf '#!/bin/sh\nCLASSPATH=$(CLASSPATH) java lox.java.Lox "$$@"' > jlox
 	chmod +x jlox
 
 lox/java/Lox.class: lox/java/*.java

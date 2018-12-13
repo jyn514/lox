@@ -1,7 +1,6 @@
 package lox.java;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.EOFException;
 import java.nio.file.Files;
@@ -20,7 +19,7 @@ public class Lox {
 
   public static void main(String[] args) throws IOException {
     if (args.length > 1) {
-      System.out.println("Usage: " + args[0] + " [file]");
+      System.out.println("Usage: jlox [file]");
       System.exit(1);
     }
     if (args.length == 1) {
@@ -30,7 +29,7 @@ public class Lox {
         System.err.println("File not found: " + args[0]);
       }
     } else if (System.console() == null) {
-      runFile(streamToString(System.in));
+      runFile(readAllInput());
     } else {
       runPrompt();
     }
@@ -51,12 +50,12 @@ public class Lox {
     }
   }
 
-  private static String streamToString(InputStream inputStream) throws IOException {
+  private static String readAllInput() throws IOException {
     // https://stackoverflow.com/questions/309424/
     ByteArrayOutputStream result = new ByteArrayOutputStream();
     byte[] buffer = new byte[1024];
     int length;
-    while ((length = inputStream.read(buffer)) != -1) {
+    while ((length = System.in.read(buffer)) != -1) {
         result.write(buffer, 0, length);
     }
     return result.toString();
@@ -98,7 +97,11 @@ public class Lox {
   }
 
   private static void runPrompt() throws IOException {
-    Readline.load(ReadlineLibrary.GnuReadline);
+    try {
+        Readline.load(ReadlineLibrary.GnuReadline);
+    } catch (UnsatisfiedLinkError e) {
+        //System.err.println("Note: GNU Readline not found, using built-in Java libraries")
+    }
     Readline.initReadline("Lox");
     Runtime.getRuntime().addShutdownHook(new Thread(Readline::cleanup));
     while (true) {

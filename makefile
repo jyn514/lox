@@ -1,44 +1,47 @@
-export CLASSPATH = .:libreadline-java.jar
-JAVACFLAGS = -Xlint:all -g
+CLASSPATH = libreadline-java.jar$(shell ./sep.sh)$(BUILD)
+BUILD = build
+JAVAFLAGS = -cp $(CLASSPATH)
+JAVACFLAGS = $(JAVAFLAGS) -Xlint:all -g -target 9 -source 9 -d $(BUILD)
+MAIN = $(BUILD)/lox/java/Lox.class
+MAINJ = lox.java.Lox
+GENSRC = lox/java/Stmt.java lox/java/Expr.java
 
+.PHONY: all
 all: jlox
 
-jlox: | lox/java/Lox.class
-	printf '#!/bin/sh\njava lox.java.Lox "$$@"' > jlox
+jlox: | $(MAIN)
+	printf '#!/bin/sh\nCLASSPATH=$(CLASSPATH) java $(MAINJ) "$$@"' > jlox
 	chmod +x jlox
 
-lox/java/Lox.class: lox/java/*.java
+$(MAIN): lox/java/*.java $(GENSRC) | $(BUILD)
 	javac $(JAVACFLAGS) $^
 
-lox/java/Stmt.java lox/java/Expr.java: tools/gen_expr.py
+$(GENSRC): tools/gen_expr.py
 	chmod +x $<
 	$^ lox/java
 
-lox/java/Parser.class: lox/java/Lexer.java lox/java/Token.java lox/java/LoxType.java
-
-lox/java/Compiler.class lox/java/Interpreter.class lox/java/ASTPrinter.class: lox/java/Parser.java
-
-%.class: %.java lox/java/Stmt.java lox/java/Expr.java
-	javac $(JAVACFLAGS) $<
-
 .PHONY: test
-test: lox/java/Lox.class
+test: jlox
 	test/test.sh
 
 .PHONY: run
-run: lox/java/Lox.class
+run: jlox
 	./jlox
 
 .PHONY: debug
-debug: lox/java/Lox.class
+debug: $(MAIN)
 	@echo run \"jdb -attach 8000\" \"stop in lox.java.Compiler.runPass\(\)\"
-	java -agentlib:jdwp=transport=dt_socket,server=y,address=8000,suspend=n lox.java.Lox
+	java $(JAVAFLAGS) -agentlib:jdwp=transport=dt_socket,server=y,address=8000,suspend=n $(MAINJ)
 
 .PHONY: clean
 clean:
-	find -name '*.class' -delete -o -name __pycache__ -exec rm -rf {} \;
+	$(RM) -r $(BUILD)
 
+.PHONY: clobber
 clobber: clean
-	rm lox/java/Expr.java lox/java/Stmt.java
+	rm -f $(GENSRC) jlox tools/__pycache__
+
+$(BUILD):
+	mkdir -p $@
 
 include dist/makefile

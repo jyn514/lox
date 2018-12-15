@@ -11,7 +11,7 @@ class Annotate extends Pass<List<Stmt>, List<Stmt>>
   implements Stmt.Visitor<Void>, Expr.Visitor<Void> {
   private static final Random rand = new Random();
   private Scope<String> scope = new Scope<>();
-  private Map<String, Expr.Symbol> types = new HashMap<>();
+  private final Map<String, Expr.Symbol> types = new HashMap<>();
 
   // boilerplate start
   Annotate(List<Stmt> input) {

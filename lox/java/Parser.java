@@ -12,7 +12,7 @@ import static lox.java.LoxType.TypeError;
  * Recursive descent top-down AST parser.
  * Methods called sooner have lower precedence than later methods.
  */
-public class Parser extends Pass<List<Token>, List<Stmt>> {
+class Parser extends Pass<List<Token>, List<Stmt>> {
   private final List<Stmt> result = new ArrayList<>();
   private int current = 0;
 
@@ -50,13 +50,13 @@ public class Parser extends Pass<List<Token>, List<Stmt>> {
 
   /* funDeclaration :: type identifier "(" ( type identifier "," )* ") block */
   private Stmt.Function funDeclaration(Token type, Token identifier) throws ParseError {
-    final Expr.Symbol func = new Expr.Symbol(identifier, -1,
-        LoxType.get(type.type));
+    final Expr.Symbol func = new Expr.Symbol(identifier,
+      LoxType.get(type.type));
     List<Expr.Symbol> arguments = new ArrayList<>();
     while (match(INT, BOOL, STRING_TYPE, DOUBLE)) {
       type = previous();
-      arguments.add(new Expr.Symbol(consume(IDENTIFIER), -1, LoxType.get(type.type)));
-      if (peek().type != COMMA) break;
+      arguments.add(new Expr.Symbol(consume(IDENTIFIER), LoxType.get(type.type)));
+      if (peek() != null && peek().type != COMMA) break;
       consume(COMMA);
     }
     func.arity = arguments.size();
@@ -67,7 +67,7 @@ public class Parser extends Pass<List<Token>, List<Stmt>> {
 
   /* varDeclaration ::= type identifier ("=" expression)? ";" */
   private Stmt.Var varDeclaration(Token type, Token identifier) throws ParseError {
-    Expr.Symbol variable = new Expr.Symbol(identifier, -1, LoxType.get(type.type));
+    Expr.Symbol variable = new Expr.Symbol(identifier, LoxType.get(type.type));
     Expr.Assign equals = null;
 
     if (match(EQUAL)) {
@@ -206,7 +206,7 @@ public class Parser extends Pass<List<Token>, List<Stmt>> {
 
   /* comma ::= expression ',' expression */
   private Expr comma() throws ParseError {
-    return parseBinary(() -> assignment(), null, COMMA);
+    return parseBinary(this::assignment, null, COMMA);
   }
 
   /* assignment ::= expression ('=' expression)?
@@ -249,27 +249,27 @@ public class Parser extends Pass<List<Token>, List<Stmt>> {
    * equality ::= comparison ( ( "!=" | "==" ) comparison )*
    */
   private Expr equality() throws ParseError {
-    return parseBinary(() -> comparison(), null, BANG_EQUAL, EQUAL_EQUAL);
+    return parseBinary(this::comparison, null, BANG_EQUAL, EQUAL_EQUAL);
   }
 
   /* comparison ::= bitwise ( ( ">" | ">=" | "<" | "<=" ) bitwise )* ; */
   private Expr comparison() throws ParseError {
-    return parseBinary(() -> bitwise(), LoxType.DOUBLE, GREATER, GREATER_EQUAL, LESS, LESS_EQUAL);
+    return parseBinary(this::bitwise, LoxType.DOUBLE, GREATER, GREATER_EQUAL, LESS, LESS_EQUAL);
   }
 
   /* bitwise ::= addition ( ( "^" | "|" | "&" ) addition )* ; */
   private Expr bitwise() throws ParseError {
-    return parseBinary(() -> addition(), LoxType.INT, CARET, PIPE, AMPERSAND);
+    return parseBinary(this::addition, LoxType.INT, CARET, PIPE, AMPERSAND);
   }
 
   /* addition ::= multiplication ( ( "-" | "+" ) multiplication )* ; */
   private Expr addition() throws ParseError {
-    return parseBinary(() -> multiplication(), LoxType.DOUBLE, MINUS, PLUS);
+    return parseBinary(this::multiplication, LoxType.DOUBLE, MINUS, PLUS);
   }
 
   /* multiplication ::= unary ( ( "/" | "*" | "%" ) unary )* ; */
   private Expr multiplication() throws ParseError {
-    return parseBinary(() -> prefixUnary(), LoxType.DOUBLE, SLASH, STAR, PERCENT);
+    return parseBinary(this::prefixUnary, LoxType.DOUBLE, SLASH, STAR, PERCENT);
   }
 
   /* prefixUnary ::= ( "!" | "-" | "++" | "--" ) prefixUnary | postfixUnary ; */
@@ -322,9 +322,9 @@ public class Parser extends Pass<List<Token>, List<Stmt>> {
       // we need to look up the type of this function in the symbol table
       if (match(RIGHT_PAREN)) {
         primary = new Expr.Call((Expr.Symbol)primary, previous(),
-            new ArrayList<>(), null);
+            new ArrayList<>());
       } else {
-        primary = new Expr.Call((Expr.Symbol)primary, previous(), arguments(), null);
+        primary = new Expr.Call((Expr.Symbol)primary, previous(), arguments());
         consume(RIGHT_PAREN);
       }
     }
@@ -348,7 +348,7 @@ public class Parser extends Pass<List<Token>, List<Stmt>> {
     if (match(FALSE)) return new Expr.Literal(false, LoxType.BOOL);
     if (match(TRUE)) return new Expr.Literal(true, LoxType.BOOL);
     if (match(NULL)) return new Expr.Literal(null, LoxType.NULL);
-    if (match(IDENTIFIER)) return new Expr.Symbol(previous(), -1, null);
+    if (match(IDENTIFIER)) return new Expr.Symbol(previous(), null);
 
     if (match(NUMBER, STRING)) {
       return new Expr.Literal(previous().value,

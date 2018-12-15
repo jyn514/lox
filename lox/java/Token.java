@@ -7,10 +7,6 @@ public class Token {
   final Object value;
   final int line, column;
 
-  Token(Type type, String lexeme, int line, int column) {
-    this(type, lexeme, line, column, null);
-  }
-
   Token(Type type, String lexeme, int line, int column, Object value) {
     this.type = type;
     this.lexeme = lexeme;
@@ -31,7 +27,7 @@ public class Token {
     // one, two, or three characters
     PLUS, PLUS_EQUAL, PLUS_PLUS,
     MINUS, MINUS_EQUAL, MINUS_MINUS,
-    SLASH, SLASH_EQUAL, SLASH_SLASH,
+    SLASH, SLASH_EQUAL,
     STAR, STAR_EQUAL,
     BANG, BANG_EQUAL,
     EQUAL, EQUAL_EQUAL,

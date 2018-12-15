@@ -8,7 +8,7 @@ import java.util.HashMap;
 import static lox.java.Lox.error;
 import static lox.java.Token.Type.*;
 
-public class Lexer extends Pass<String, List<Token>> {
+class Lexer extends Pass<String, List<Token>> {
   private static final Map<Character, Character> escape_characters = new HashMap<>();
   private static final Map<String, Token.Type> keywords = new HashMap<>();
 
@@ -130,7 +130,7 @@ public class Lexer extends Pass<String, List<Token>> {
 
       default:
         if (isAlpha(c)) return makeToken(identifier());
-        return handleErrors(c);
+        return handleErrors();
     }
   }
 
@@ -271,7 +271,7 @@ public class Lexer extends Pass<String, List<Token>> {
    * LEFT_PAREN ( null
    * LEFT_PAREN ( null
    */
-  private Token handleErrors(char c) {
+  private Token handleErrors() {
     if (errorStart == -1) errorStart = start;
     start = current;
 

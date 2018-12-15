@@ -1,6 +1,6 @@
 package lox.java;
 
-public abstract class Pass<Accept, Return> {
+abstract class Pass<Accept, Return> {
   protected final Accept input;
 
   Pass(Accept input) {

@@ -1,13 +1,11 @@
 package lox.java;
 
-import java.util.List;
 import java.util.ArrayList;
-import java.util.Map;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static java.util.Map.entry;
-import static lox.java.LoxType.TypeError;
-import static lox.java.LoxType.compareTo;
 import static lox.java.Lox.error;
 import static lox.java.Token.Type.*;
 
@@ -339,7 +337,6 @@ class Compiler extends Pass<List<Stmt>, List<String>>
     currentBlock = rightLabel;
 
     ExprNode right = expr.right.accept(this);
-    //add(assign(result, noop(right, expr.type)));
     add("br label %" + endLabel);
 
     add(endLabel + ':');
@@ -419,7 +416,6 @@ class Compiler extends Pass<List<Stmt>, List<String>>
     }
     ExprNode result = new ExprNode(expr.type);
 
-    StringBuilder asm = new StringBuilder();
     add(assign(result, operation + ' ' + left.register + ", " + right.register));
     return result;
   }
@@ -472,11 +468,6 @@ class Compiler extends Pass<List<Stmt>, List<String>>
     throw new IllegalArgumentException("Unknown literal type " + expr.type);
   }
 
-  private String noop(ExprNode register, LoxType type) {
-    return operators.get(type).get(PLUS)
-      + " 0, " + register.register;
-  }
-
   private String loadStringPointer(String register, int length) {
     String type = String.format("[%d x i8]", length);
     return String.format("getelementptr %s, %s* %s, i32 0, i64 0",
@@ -488,10 +479,10 @@ class Compiler extends Pass<List<Stmt>, List<String>>
   }
 
   private String assign(ExprNode node, String s) {
-    return /* node.llvmType + ' ' + */ node.register + " = " + s;
+    return node.register + " = " + s;
   }
 
-  // default to main function
+  // default to current function context
   private void add(String s) {
     add(s, context);
   }
@@ -510,7 +501,7 @@ class Compiler extends Pass<List<Stmt>, List<String>>
    * as well as https://stackoverflow.com/q/952914
    */
   private static <T> List<T> flatten(List<List<T>> list) {
-    List<T> result = new ArrayList<T>();
+    List<T> result = new ArrayList<>();
     for (List<T> sublist : list) {
       result.addAll(sublist);
     }

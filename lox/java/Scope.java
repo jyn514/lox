@@ -3,10 +3,9 @@ package lox.java;
 import java.util.Map;
 import java.util.HashMap;
 
-@SuppressWarnings("serial")
 class Scope<T> {
   private final Map<String, T> map = new HashMap<>();
-  final Scope<T> previous;
+  private final Scope<T> previous;
 
   public Scope() {
     this(null);

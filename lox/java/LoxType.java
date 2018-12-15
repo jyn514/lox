@@ -49,5 +49,5 @@ enum LoxType {
   }
 
   @SuppressWarnings("serial")
-  public static class TypeError extends Exception {}
+  static class TypeError extends Exception {}
 }

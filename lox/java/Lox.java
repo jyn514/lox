@@ -11,7 +11,7 @@ import java.util.List;
 import org.gnu.readline.Readline;
 import org.gnu.readline.ReadlineLibrary;
 
-public class Lox {
+class Lox {
   private static int errors = 0;
   private static String filename;
   private static final List<Class<? extends Pass<?, ?>>> passes = List.of(
@@ -90,7 +90,7 @@ public class Lox {
         + ": error: " + message);
   }
 
-  private static void runFile(String input) throws IOException {
+  private static void runFile(String input) {
     run(input);
     if (errors > 0) {
       System.err.print("" + errors + " error");

@@ -3,6 +3,7 @@ package lox.java;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import static java.util.Map.entry;
 import static lox.java.Lox.error;
@@ -137,13 +138,22 @@ class Lexer extends Pass<String, List<Token>> {
     }
   }
 
-  private String string () {
+  private String string() {
+    boolean multiLine = false;
+    if (match('"')) {
+      if (match('"')) multiLine = true;
+      else return "";
+    }
     StringBuilder result = new StringBuilder();
     boolean escaped = false;
+    String end = multiLine ? "\"\"\"" : "\"";
+    Supplier<Boolean> endCondition = multiLine ? () -> input.length() <= current + 2
+        || (peek() == '\"' && peekNext() == '\"' && input.charAt(current + 2) == '\"')
+     : () -> input.length() <= current || peek() == '"';
 
-    while (escaped || peek() != '"') {
-      if (peek() == '\n') {
-        error(line++, column, "Unterminated string: expected '\"', got <end of line>");
+    while (escaped || !endCondition.get()) {
+      if (!multiLine && peek() == '\n') {
+        error(line, column, "Unterminated string: expected '\"', got <end of line>");
         return result.toString();
       }
       char c = advance();
@@ -164,9 +174,17 @@ class Lexer extends Pass<String, List<Token>> {
     }
 
     if (atEnd()) {
-      error(line, column, "Unterminated string: expected '\"', got <end of file>");
+      error(line, column, "Unterminated string: expected '" + end + "', got <end of file>");
     } else {
       advance();  // closing "
+      if (multiLine) { // closing """
+        if (input.length() <= current + 1) {
+          error(line, column, "Unterminated string: expected '" + end + "', got " + input.substring(current) + "<end of file>");
+        } else {
+          advance();
+          advance();
+        }
+      }
     }
     return result.toString();
   }

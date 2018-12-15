@@ -350,11 +350,17 @@ class Parser extends Pass<List<Token>, List<Stmt>> {
     if (match(NULL)) return new Expr.Literal(null, LoxType.NULL);
     if (match(IDENTIFIER)) return new Expr.Symbol(previous(), null);
 
-    if (match(NUMBER, STRING)) {
+    if (match(NUMBER)) {
       return new Expr.Literal(previous().value,
-          previous().type == STRING ? LoxType.STRING
-          : previous().value instanceof Integer ? LoxType.INT
-          : LoxType.DOUBLE);
+        previous().value instanceof Integer ? LoxType.INT : LoxType.DOUBLE);
+    }
+
+    if (match(STRING)) {
+      String value = previous().value.toString();
+      if (match(STRING)) {
+        value += previous().value;
+      }
+      return new Expr.Literal(value, LoxType.STRING);
     }
 
     // groupings

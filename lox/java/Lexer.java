@@ -50,7 +50,7 @@ class Lexer extends Pass<String, List<Token>> {
   }
 
   private final List<Token> tokens = new ArrayList<>();
-  // current should ONLY be modified by advance() (since it updates column)
+  // current should ONLY be modified by advance() (since it updates column and line)
   private int start = 0, current = 0, line = 1, column = 0;
   private int errorStart = -1;
 
@@ -70,7 +70,6 @@ class Lexer extends Pass<String, List<Token>> {
    * Returns the next token.
    * If the next token is illegal, or if there is no next token, return null.
    */
-  @SuppressWarnings("fallthrough")
   private Token scanToken() {
     char c = advance();
     if (isDigit(c) || (c == '.' && isDigit(peek()))) {
@@ -97,7 +96,6 @@ class Lexer extends Pass<String, List<Token>> {
           flushError();
           while(!atEnd() && advance() != '\n');
           if (previous() == '\n') {
-            line++;
             start = current;
             return scanToken();
           }
@@ -110,7 +108,7 @@ class Lexer extends Pass<String, List<Token>> {
             advance();
             start = current;
             return atEnd() ? null : scanToken();
-          } else if (previous() == '\n') line++;
+          }
         }
         return makeToken(match('=') ? SLASH_EQUAL : SLASH);
 
@@ -121,9 +119,8 @@ class Lexer extends Pass<String, List<Token>> {
       case '&': return makeToken(match('=') ? AMPERSAND_EQUAL : AMPERSAND);
       case '|': return makeToken(match('=') ? PIPE_EQUAL : PIPE);
 
-                // ignore whitespace
+      // ignore whitespace
       case '\n':
-                line++;
       case ' ':
       case '\r':
       case '\t':
@@ -213,7 +210,12 @@ class Lexer extends Pass<String, List<Token>> {
 
   private char advance() {
     column++;
-    return input.charAt(current++);
+    char ret = input.charAt(current++);
+    if (ret == '\n') {
+      line++;
+      column = 0;
+    }
+    return ret;
   }
 
   private boolean match(char c) {

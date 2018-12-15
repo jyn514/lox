@@ -13,6 +13,7 @@ import org.gnu.readline.ReadlineLibrary;
 
 public class Lox {
   private static int errors = 0;
+  private static String filename;
   private static final List<Class<? extends Pass<?, ?>>> passes = List.of(
     Lexer.class, Parser.class, Annotate.class, Compiler.class, Assembler.class
   );
@@ -24,13 +25,16 @@ public class Lox {
     }
     if (args.length == 1) {
       try {
+        filename = args[0];
         runFile(new String(Files.readAllBytes(Paths.get(args[0]))));
       } catch (NoSuchFileException e) {
         System.err.println("File not found: " + args[0]);
       }
     } else if (System.console() == null) {
+      filename = "<stdin>";
       runFile(readAllInput());
     } else {
+      filename = "<stdin>";
       runPrompt();
     }
   }
@@ -82,7 +86,7 @@ public class Lox {
 
   static void error(int line, int column, String message) {
     errors++;
-    System.err.println(("" + line) + ':' + column
+    System.err.println(filename + ':' + line + ':' + column
         + ": error: " + message);
   }
 

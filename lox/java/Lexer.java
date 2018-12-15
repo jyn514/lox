@@ -96,13 +96,21 @@ class Lexer extends Pass<String, List<Token>> {
         if (match('/')) {
           flushError();
           while(!atEnd() && advance() != '\n');
-          if (input.charAt(current - 1) == '\n') {
+          if (previous() == '\n') {
             line++;
             start = current;
             return scanToken();
           }
           // atEnd
           return null;
+        } else if (match('*')) {
+          flushError();
+          while (!atEnd() && advance() != '*');
+          if (previous() == '*' && match('/')) {
+            advance();
+            start = current;
+            return atEnd() ? null : scanToken();
+          } else if (previous() == '\n') line++;
         }
         return makeToken(match('=') ? SLASH_EQUAL : SLASH);
 
@@ -189,6 +197,10 @@ class Lexer extends Pass<String, List<Token>> {
       advance();
     }
     return keywords.getOrDefault(input.substring(start, current), IDENTIFIER);
+  }
+
+  private char previous() {
+    return current != 0 ? input.charAt(current - 1) : '\0';
   }
 
   private char peek() {

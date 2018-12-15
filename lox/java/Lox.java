@@ -94,7 +94,7 @@ class Lox {
 
   private static void runFile(String input) {
     List<Class<? extends Pass<?, ?>>> passes = new ArrayList<>(interactivePasses);
-    passes.remove(passes.size() - 1);  // we link instead of interpreting
+    passes.set(passes.size() - 1, Optimize.class);  // we link instead of interpreting
     passes.add(Linker.class);
     run(input, passes);
     if (errors > 0) {

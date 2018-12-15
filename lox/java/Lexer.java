@@ -3,51 +3,49 @@ package lox.java;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
-import java.util.HashMap;
 
+import static java.util.Map.entry;
 import static lox.java.Lox.error;
 import static lox.java.Token.Type.*;
 
 class Lexer extends Pass<String, List<Token>> {
-  private static final Map<Character, Character> escape_characters = new HashMap<>();
-  private static final Map<String, Token.Type> keywords = new HashMap<>();
+  private static final Map<Character, Character> escape_characters = Map.ofEntries(
+    entry('\'', '\''),
+    entry('"', '"'),
+    entry('\\', '\\'),
+    entry('0', '\0'),
+    entry('b', '\b'),
+    entry('f', '\f'),
+    entry('n', '\n'),
+    entry('r', '\r'),
+    entry('t', '\t')
+  );
+  private static final Map<String, Token.Type> keywords = Map.ofEntries(
+    entry("and",    AND),
+    entry("class",  CLASS),
+    entry("else",   ELSE),
+    entry("false",  FALSE),
+    entry("for",    FOR),
+    entry("function", FUNCTION),
+    entry("if",     IF),
+    entry("null",   NULL),
+    entry("or",     OR),
+    entry("print",  PRINT),
+    entry("return", RETURN),
+    entry("super",  SUPER),
+    entry("this",   THIS),
+    entry("true",   TRUE),
+    entry("var",    VAR),
+    entry("while",  WHILE),
+    entry("break", BREAK),
+    entry("continue", CONTINUE),
 
-  static {
-    escape_characters.put('\'', '\'');
-    escape_characters.put('"', '"');
-    escape_characters.put('\\', '\\');
-    escape_characters.put('0', '\0');
-    escape_characters.put('b', '\b');
-    escape_characters.put('f', '\f');
-    escape_characters.put('n', '\n');
-    escape_characters.put('r', '\r');
-    escape_characters.put('t', '\t');
-
-    keywords.put("and",    AND);
-    keywords.put("class",  CLASS);
-    keywords.put("else",   ELSE);
-    keywords.put("false",  FALSE);
-    keywords.put("for",    FOR);
-    keywords.put("function", FUNCTION);
-    keywords.put("if",     IF);
-    keywords.put("null",   NULL);
-    keywords.put("or",     OR);
-    keywords.put("print",  PRINT);
-    keywords.put("return", RETURN);
-    keywords.put("super",  SUPER);
-    keywords.put("this",   THIS);
-    keywords.put("true",   TRUE);
-    keywords.put("var",    VAR);
-    keywords.put("while",  WHILE);
-    keywords.put("break", BREAK);
-    keywords.put("continue", CONTINUE);
-
-    keywords.put("bool", BOOL);
-    keywords.put("int", INT);
-    keywords.put("double", DOUBLE);
-    keywords.put("string", STRING_TYPE);
-    keywords.put("void", VOID);
-  }
+    entry("bool", BOOL),
+    entry("int", INT),
+    entry("double", DOUBLE),
+    entry("string", STRING_TYPE),
+    entry("void", VOID)
+  );
 
   private final List<Token> tokens = new ArrayList<>();
   // current should ONLY be modified by advance() (since it updates column and line)

@@ -227,22 +227,12 @@ class Parser extends Pass<List<Token>, List<Stmt>> {
 
   /* or ::= and ("or" and)* */
   private Expr or() throws ParseError {
-    Expr left = and();
-    while (match(OR)) {
-      if (left.type != LoxType.BOOL) throwTypeError(left.type, previous(), LoxType.BOOL);
-      left = new Expr.Logical(left, previous(), and(), LoxType.BOOL);
-    }
-    return left;
+    return parseBinary(this::and, LoxType.BOOL, Expr.Logical.class, OR);
   }
 
   /* and ::= equality ("and" equality)* */
   private Expr and() throws ParseError {
-    Expr left = equality();
-    while (match(AND)) {
-      if (left.type != LoxType.BOOL) throwTypeError(left.type, previous(), LoxType.BOOL);
-      left = new Expr.Logical(left, previous(), equality(), LoxType.BOOL);
-    }
-    return left;
+    return parseBinary(this::equality, LoxType.BOOL, Expr.Logical.class, AND);
   }
 
   /*
@@ -378,7 +368,6 @@ class Parser extends Pass<List<Token>, List<Stmt>> {
     } else {
       error(peek().line, peek().column,
           "Unhandled token " + peek().type);
-      //advance();
       panic();
     }
     throw new ParseError();
@@ -407,7 +396,11 @@ class Parser extends Pass<List<Token>, List<Stmt>> {
     }
   }
 
-  private Expr parseBinary(BinaryExprParser function, LoxType max,
+  private Expr parseBinary(BinaryExprParser function, LoxType max, Token.Type ... input) throws ParseError {
+    return parseBinary(function, max, Expr.Binary.class, input);
+  }
+
+  private Expr parseBinary(BinaryExprParser function, LoxType max, Class<? extends Expr> expected,
       Token.Type ... input) throws ParseError {
     Expr result = function.parse();
     while (match(input)) {
@@ -415,7 +408,12 @@ class Parser extends Pass<List<Token>, List<Stmt>> {
       Expr right = function.parse();
       // see https://docs.oracle.com/javase/9/docs/api/java/util/Set.html#toArray-T:A-
       assertPromotable(result.type, operator, right.type, max);
-      result = new Expr.Binary(result, operator, right, result.type);
+      try {
+        result = expected.getDeclaredConstructor(Expr.class, Token.class, Expr.class, LoxType.class)
+          .newInstance(result, operator, right, result.type);
+      } catch (ReflectiveOperationException e) {
+        throw new ParseError("Illegal operation: " + e.toString());
+      }
     }
     return result;
   }
@@ -479,5 +477,8 @@ class Parser extends Pass<List<Token>, List<Stmt>> {
   }
 
   @SuppressWarnings("serial")
-  private static class ParseError extends Exception {}
+  private static class ParseError extends Exception {
+    ParseError() { super(); }
+    ParseError(String s) { super(s); }
+  }
 }

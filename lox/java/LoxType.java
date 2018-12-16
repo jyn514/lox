@@ -15,8 +15,11 @@ enum LoxType {
   public static LoxType assertPromotable(LoxType left, LoxType right, LoxType max)
       throws TypeError {
       LoxType result = compareTo(left, right);
-      if (max != null)
-        result = compareTo(result, max);
+      if (max != null && max.compareTo(result) < 0) {
+        // TODO: will break if we want to ensure a minimum (e.g. float not int)
+        throw new TypeError(String.format("Least promoted class %s for types %s and %s is greater than max of %s",
+          result, left, right, max));
+      }
       return result;
   }
 
@@ -49,5 +52,8 @@ enum LoxType {
   }
 
   @SuppressWarnings("serial")
-  static class TypeError extends Exception {}
+  static class TypeError extends Exception {
+    TypeError() { super(); }
+    TypeError(String s) { super(s); }
+  }
 }

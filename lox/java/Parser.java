@@ -308,9 +308,8 @@ class Parser extends Pass<List<Token>, List<Stmt>> {
       if (!(primary instanceof Expr.Symbol)) {
         error(previous().line, previous().column, "INTERNAL error: "
             + "first class functions and function pointers not implemented");
-      }
-      // we need to look up the type of this function in the symbol table
-      if (match(RIGHT_PAREN)) {
+      } else if (match(RIGHT_PAREN)) {
+        // we need to look up the type of this function in the symbol table
         primary = new Expr.Call((Expr.Symbol)primary, previous(),
             new ArrayList<>());
       } else {

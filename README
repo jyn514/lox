@@ -1,7 +1,11 @@
 ## Dependencies
-- Java 9+ (because Map.of is too nice to live without)
-- llvm or at least lli
-- libreadline (?) java is packaged but not sure if that includes the JNI extension
+- Java 9+ (because `Map.of` is too nice to live without)
+- llvm
+  - `lli` for the REPL
+  - `clang` for outputting an executable. Despite what it looks like, `clang` does not compile any code, it just assembles and links the .ll file. This is because the equivalent shell script is both 6 lines and system dependant.
+
+### Optional dependencies
+- `libreadline` (for readline in the REPL)
 
 ## Differences from upstream:
 

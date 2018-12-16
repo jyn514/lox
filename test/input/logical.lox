@@ -1,3 +1,4 @@
 print true or false;
 print true and false;
 print (true or false) and true;
+print true and (false or true);

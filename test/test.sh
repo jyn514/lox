@@ -1,5 +1,5 @@
 #!/bin/sh
-dir=$(realpath $(dirname $0))
+dir=$(dirname $0)
 cd $dir/..
 for f in "$dir"/input/*; do
 	echo $(basename "$f")

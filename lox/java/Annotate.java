@@ -95,6 +95,7 @@ class Annotate extends Pass<List<Stmt>, List<Stmt>>
     expr.lvalue = retrieve(old);
     if (expr.lvalue == null) error(old.name.line, old.name.column,
         "Undeclared variable " + old.name.lexeme);
+    expr.rvalue.accept(this);
     return null;
   }
 

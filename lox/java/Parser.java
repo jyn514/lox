@@ -3,7 +3,9 @@ package lox.java;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Map;
 
+import static java.util.Map.entry;
 import static lox.java.Token.Type.*;
 import static lox.java.Lox.error;
 import static lox.java.LoxType.TypeError;
@@ -14,6 +16,19 @@ import static lox.java.LoxType.TypeError;
  */
 class Parser extends Pass<List<Token>, List<Stmt>> {
   private final List<Stmt> result = new ArrayList<>();
+  private final Map<Token.Type, Token.Type> enhancedAssignment = Map.ofEntries(
+    entry(BANG_EQUAL, BANG),
+    entry(DOT_EQUAL, DOT),
+    entry(PIPE_EQUAL, PIPE),
+    entry(AMPERSAND_EQUAL, AMPERSAND),
+    entry(PLUS_EQUAL, PLUS),
+    entry(MINUS_EQUAL, MINUS),
+    entry(STAR_EQUAL, STAR),
+    entry(SLASH_EQUAL, SLASH),
+    entry(CARET_EQUAL, CARET),
+    entry(PERCENT_EQUAL, PERCENT)
+  );
+
   private int current = 0;
 
   private static final Token.Type[] DECLARATORS = { VOID, INT, BOOL, STRING_TYPE, DOUBLE };
@@ -209,7 +224,7 @@ class Parser extends Pass<List<Token>, List<Stmt>> {
     return parseBinary(this::assignment, null, COMMA);
   }
 
-  /* assignment ::= expression ('=' expression)?
+  /* assignment ::= expression (equal expression)?
    * Note that we don't call parseBinary because assignment is right-associative */
   private Expr assignment() throws ParseError {
     Expr lvalue = or();
@@ -219,6 +234,14 @@ class Parser extends Pass<List<Token>, List<Stmt>> {
       Expr rvalue = assignment();
       if (!(lvalue instanceof Expr.Symbol)) {
         error(equals.line, equals.column, "INTERNAL error: pointers not implemented");
+        throw new ParseError();
+      }
+      // enhanced assignment: a &= 2;
+      if (equals.type != EQUAL) {
+        Token operation = new Token(enhancedAssignment.get(equals.type),
+          equals.lexeme.substring(0, 1), equals.line, equals.column, null);
+        rvalue = new Expr.Binary(lvalue, operation, rvalue, rvalue.type);
+        equals = new Token(EQUAL, "=", equals.line, equals.column, null);
       }
       return new Expr.Assign((Expr.Symbol)lvalue, equals, rvalue, rvalue.type);
     }

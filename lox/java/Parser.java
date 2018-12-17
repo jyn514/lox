@@ -65,12 +65,12 @@ class Parser extends Pass<List<Token>, List<Stmt>> {
 
   /* funDeclaration :: type identifier "(" ( type identifier "," )* ") block */
   private Stmt.Function funDeclaration(Token type, Token identifier) throws ParseError {
-    final Expr.Symbol func = new Expr.Symbol(identifier,
+    final Expr.Symbol func = new Expr.Symbol(identifier, -1,
       LoxType.get(type.type));
     List<Expr.Symbol> arguments = new ArrayList<>();
     while (match(INT, BOOL, STRING_TYPE, DOUBLE)) {
       type = previous();
-      arguments.add(new Expr.Symbol(consume(IDENTIFIER), LoxType.get(type.type)));
+      arguments.add(new Expr.Symbol(consume(IDENTIFIER), -1, LoxType.get(type.type)));
       if (peek() != null && peek().type != COMMA) break;
       consume(COMMA);
     }
@@ -82,7 +82,7 @@ class Parser extends Pass<List<Token>, List<Stmt>> {
 
   /* varDeclaration ::= type identifier ("=" expression)? ";" */
   private Stmt.Var varDeclaration(Token type, Token identifier) throws ParseError {
-    Expr.Symbol variable = new Expr.Symbol(identifier, LoxType.get(type.type));
+    Expr.Symbol variable = new Expr.Symbol(identifier, -1, LoxType.get(type.type));
     Expr.Assign equals = null;
 
     if (match(EQUAL)) {
@@ -334,9 +334,9 @@ class Parser extends Pass<List<Token>, List<Stmt>> {
       } else if (match(RIGHT_PAREN)) {
         // we need to look up the type of this function in the symbol table
         primary = new Expr.Call((Expr.Symbol)primary, previous(),
-            new ArrayList<>());
+            new ArrayList<>(), null);
       } else {
-        primary = new Expr.Call((Expr.Symbol)primary, previous(), arguments());
+        primary = new Expr.Call((Expr.Symbol)primary, previous(), arguments(), null);
         consume(RIGHT_PAREN);
       }
     }
@@ -360,7 +360,7 @@ class Parser extends Pass<List<Token>, List<Stmt>> {
     if (match(FALSE)) return new Expr.Literal(false, LoxType.BOOL);
     if (match(TRUE)) return new Expr.Literal(true, LoxType.BOOL);
     if (match(NULL)) return new Expr.Literal(null, LoxType.NULL);
-    if (match(IDENTIFIER)) return new Expr.Symbol(previous(), null);
+    if (match(IDENTIFIER)) return new Expr.Symbol(previous(), -1, null);
 
     if (match(NUMBER)) {
       return new Expr.Literal(previous().value,

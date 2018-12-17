@@ -16,7 +16,7 @@
 - logs column as well as line number on error
 - logs multiple illegal tokens in a row as a single error
 - use 'null' instead of 'nil'
-- use 'function' instead of 'fun'
+- use c-style function declarations instead of 'fun'
 - adds several operators:
     - unaries (PLUS_PLUS, MINUS_MINUS)
     - bitwise functions (PIPE, AMPERSAND, PERCENT, CARET)

@@ -27,7 +27,6 @@ class Lexer extends Pass<String, List<Token>> {
     entry("else",   ELSE),
     entry("false",  FALSE),
     entry("for",    FOR),
-    entry("function", FUNCTION),
     entry("if",     IF),
     entry("null",   NULL),
     entry("or",     OR),

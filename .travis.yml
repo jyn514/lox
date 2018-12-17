@@ -1,0 +1,5 @@
+sudo: false
+language: java
+jdk: openjdk11
+install: echo no install necessary
+script: make distclean && make test

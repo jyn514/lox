@@ -291,13 +291,8 @@ class Parser extends Pass<List<Token>, List<Stmt>> {
       Token operator = previous();
       Expr expr = prefixUnary();
 
-      // TODO: this is a mess, clean it up when we implement type promotion
-      if ((operator.type != BANG
-            && expr.type != LoxType.INT && expr.type != LoxType.DOUBLE)
-          || (operator.type == BANG && expr.type != LoxType.BOOL))
-        error(operator.line, operator.column,
-            "Illegal type " + expr.type
-            + " for unary operator " + operator);
+      if (operator.type == BANG) assertPromotable(LoxType.BOOL, operator, expr.type, LoxType.BOOL);
+      else assertPromotable(LoxType.DOUBLE, operator, expr.type, null);
       return new Expr.Unary(operator, expr, expr.type);
     }
     /*

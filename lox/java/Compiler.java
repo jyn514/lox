@@ -341,7 +341,7 @@ class Compiler extends Pass<List<Stmt>, List<String>>
 
     add(endLabel + ':');
     add(assign(result, String.format("phi i1 [ %s, %%%s ], [ %s, %%%s ]",
-            left.register, originalLabel, right.register, rightLabel)));
+            left.register, originalLabel, right.register, currentBlock)));
     currentBlock = endLabel;
 
     return result;

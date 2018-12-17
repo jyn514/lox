@@ -1,3 +1,5 @@
+![Travis CI status](https://travis-ci.com/jyn514/lox.svg?branch=master)
+
 ## Dependencies
 - Java 9+ (because `Map.of` is too nice to live without)
 - llvm

@@ -179,6 +179,7 @@ class Compiler extends Pass<List<Stmt>, List<String>>
     if (branch.otherwise != null) {
       add(elseLabel + ':');
       add(branch.otherwise.accept(this));
+      add("br label %" + afterLabel);
     }
 
     return afterLabel + ':';
@@ -362,7 +363,11 @@ class Compiler extends Pass<List<Stmt>, List<String>>
   public ExprNode visitExpr(Expr.Call call) {
     ExprNode result = new ExprNode(call.type);
     StringBuilder builder = new StringBuilder();
-    builder.append(result.register).append(" = call ").append(result.llvmType)
+
+    if (call.callee.type != LoxType.NULL) {
+      builder.append(result.register).append(" = ");
+    }
+    builder.append("call ").append(result.llvmType)
            .append(" @").append(call.callee.name.lexeme).append('(');
 
     for (Expr expr : call.arguments) {

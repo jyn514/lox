@@ -59,6 +59,7 @@ class Annotate extends Pass<List<Stmt>, List<Stmt>>
 
   public Void visitStmt(Stmt.Function func) {
     func.identifier.arity = func.arguments.size();
+    String oldName = func.identifier.name.lexeme;
     create(func.identifier);
 
     Stmt.Function oldFunc = currentFunction;
@@ -69,6 +70,16 @@ class Annotate extends Pass<List<Stmt>, List<Stmt>>
     returnFound = false;
 
     func.body.accept(this);
+    if (!returnFound) {
+      if (func.identifier.type == LoxType.NULL) {
+        func.body.statements.add(new Stmt.Return(new Token(
+          Token.Type.IDENTIFIER, "return", -1, -1, null), null));
+      } else {
+        error(func.identifier.name.line, func.identifier.name.column,
+          String.format("Must return a value for function '%s' declared as " + func.identifier.type,
+            oldName));
+      }
+    }
 
     // pop them off
     currentFunction = oldFunc;

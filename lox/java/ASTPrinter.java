@@ -22,6 +22,11 @@ public class ASTPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
     return parenthesize("function", stmt.identifier, stmt.arguments, stmt.body);
   }
 
+  @Override
+  public String visitStmt(Stmt.Return stmt) {
+    return parenthesize("return", stmt.value);
+  }
+
   public String visitStmt(Stmt.Block stmt) {
     return parenthesize("block", stmt.statements.toArray());
   }

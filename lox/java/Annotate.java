@@ -10,8 +10,10 @@ import static lox.java.Lox.error;
 class Annotate extends Pass<List<Stmt>, List<Stmt>>
   implements Stmt.Visitor<Void>, Expr.Visitor<Void> {
   private static final Random rand = new Random();
-  private Scope<String> scope = new Scope<>();
   private final Map<String, Expr.Symbol> types = new HashMap<>();
+  private Scope<String> scope = new Scope<>();
+  private Stmt.Function currentFunction = null;
+  private boolean returnFound = false;
 
   // boilerplate start
   Annotate(List<Stmt> input) {
@@ -58,7 +60,45 @@ class Annotate extends Pass<List<Stmt>, List<Stmt>>
   public Void visitStmt(Stmt.Function func) {
     func.identifier.arity = func.arguments.size();
     create(func.identifier);
+
+    Stmt.Function oldFunc = currentFunction;
+    boolean oldReturn = returnFound;
+
+    // push these on the stack
+    currentFunction = func;
+    returnFound = false;
+
     func.body.accept(this);
+
+    // pop them off
+    currentFunction = oldFunc;
+    returnFound = oldReturn;
+
+    return null;
+  }
+
+  @Override
+  public Void visitStmt(Stmt.Return stmt) {
+    if (currentFunction == null) {
+      error(stmt.keyword.line, stmt.keyword.column, "Cannot return unless inside function");
+      return null;
+    } else if (returnFound) {
+      // TODO: be smart and allow if (x) return true else return false;
+      error(stmt.keyword.line, stmt.keyword.column, "Cannot return more than once inside a function");
+      return null;
+    }
+    returnFound = true;
+    LoxType actual;
+    if (stmt.value != null) {
+      stmt.value.accept(this);
+      actual = stmt.value.type;
+    } else {
+      actual = LoxType.NULL;
+    }
+    if (actual != currentFunction.identifier.type) {
+      error(stmt.keyword.line, stmt.keyword.column, "Illegal return type: function declared with type "
+        + currentFunction.identifier.type + ", got " + actual);
+    }
     return null;
   }
 

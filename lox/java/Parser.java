@@ -93,7 +93,7 @@ class Parser extends Pass<List<Token>, List<Stmt>> {
   }
 
   /* statement ::= exprStmt | printStmt | block
-   *               | if | while | for | break | continue | ';' */
+   *               | if | while | for | break | continue | return | ';' */
   private Stmt statement() throws ParseError {
     if (match(PRINT)) return printStatement();
     if (match(LEFT_BRACE)) return block();
@@ -105,9 +105,19 @@ class Parser extends Pass<List<Token>, List<Stmt>> {
       consume(SEMICOLON);
       return result;
     }
+    if (match(RETURN)) return returnStatement();
     if (match(SEMICOLON)) return null;
 
     return expressionStatement();
+  }
+
+  /* return ::= 'return' expression? ';' */
+  private Stmt.Return returnStatement() throws ParseError {
+    Token keyword = previous();
+    if (match(SEMICOLON)) {
+      return new Stmt.Return(keyword, null);
+    }
+    return new Stmt.Return(keyword, expressionStatement().expression);
   }
 
   /* block ::= '{' declaration* '}' */

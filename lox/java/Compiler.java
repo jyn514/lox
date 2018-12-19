@@ -188,33 +188,26 @@ class Compiler extends Pass<List<Stmt>, List<String>>
   public String visitStmt(Stmt.Print print) {
     String call = String.format("%%unused_register%d = call i32 ",
         currentIntermediates++);
-    ExprNode expr, printNode;
+    // need to evaluate expression even if null (function calls could have side effects)
+    final ExprNode expr = print.expression.accept(this), printNode = new ExprNode(LoxType.STRING);
 
     switch(print.expression.type) {
       case NULL:
-        expr = new ExprNode(LoxType.STRING);
-        add(assign(expr, loadStringPointer(PUTS_NULL, 5)));
+        add(assign(printNode, loadStringPointer(PUTS_NULL, 5)));
         call += "@puts (i8* " + expr.register + ')';
         break;
       case STRING:
-        expr = print.expression.accept(this);
         call += "@puts (i8* " + expr.register + ')';
         break;
       case DOUBLE:
-        expr = print.expression.accept(this);
-        printNode = new ExprNode(LoxType.STRING);
         add(assign(printNode, loadStringPointer(PRINTF_DOUBLE, 4)));
         call += "(i8*, ...) @printf (" + printNode +  ", " + expr + ')';
         break;
       case INT:
-        expr = print.expression.accept(this);
-        printNode = new ExprNode(LoxType.STRING);
         add(assign(printNode, loadStringPointer(PRINTF_INT, 4)));
         call += "(i8*, ...) @printf (" + printNode + ", " + expr + ')';
         break;
       case BOOL:
-        expr = print.expression.accept(this);
-        printNode = new ExprNode(LoxType.STRING);
         ExprNode printTrue = new ExprNode(LoxType.STRING),
                  printFalse = new ExprNode(LoxType.STRING);
         add(assign(printTrue, loadStringPointer(PUTS_TRUE, 5)));
@@ -282,13 +275,18 @@ class Compiler extends Pass<List<Stmt>, List<String>>
     add(asm.append(" {").toString());
     add((currentBlock = "funcStart" + currentLabel++) + ':');
     add(func.body.accept(this));
-
-    // TODO: very wrong
-    add("ret void");
     add("}");
 
     context--;
     return "";
+  }
+
+  @Override
+  public String visitStmt(Stmt.Return stmt) {
+    if (stmt.value == null) {
+      return "ret void";
+    }
+    return "ret " + stmt.value.accept(this);
   }
 
   public ExprNode visitExpr(Expr.Symbol symbol) {
@@ -364,7 +362,7 @@ class Compiler extends Pass<List<Stmt>, List<String>>
   public ExprNode visitExpr(Expr.Call call) {
     ExprNode result = new ExprNode(call.type);
     StringBuilder builder = new StringBuilder();
-    builder.append("call ").append(result.llvmType)
+    builder.append(result.register).append(" = call ").append(result.llvmType)
            .append(" @").append(call.callee.name.lexeme).append('(');
 
     for (Expr expr : call.arguments) {

@@ -25,6 +25,7 @@ ALL_TYPES = [
         "While": ["final Expr condition", "final Stmt body"],
         "LoopControl": ["final Token keyword"],
         "Function": ["Expr.Symbol identifier", "final List<Expr.Symbol> arguments", "final Stmt.Block body"],
+        "Return": ["final Token keyword", "final Expr value"]
     }, [])
 ]
 

@@ -10,7 +10,7 @@ GENSRC = lox/java/Stmt.java lox/java/Expr.java
 all: jlox
 
 jlox: | $(MAIN)
-	printf '#!/bin/sh\nCLASSPATH=$(CLASSPATH) java $(MAINJ) "$$@"' > jlox
+	printf 'cd "$$(dirname "$$0")" && CLASSPATH=libreadline-java.jar:build java lox.java.Lox "$$@"' > jlox
 	chmod +x jlox
 
 $(MAIN): lox/java/*.java $(GENSRC) | $(BUILD)
@@ -35,7 +35,7 @@ debug: $(MAIN)
 
 .PHONY: clean
 clean:
-	$(RM) -r $(BUILD)
+	$(RM) -r $(BUILD) a.out
 
 .PHONY: clobber
 clobber: clean

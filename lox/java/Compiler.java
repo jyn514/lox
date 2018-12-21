@@ -347,12 +347,11 @@ class Compiler extends Pass<List<Stmt>, List<String>>
   }
 
   public ExprNode visitExpr(Expr.Unary unary) {
-    ExprNode result = unary.right.accept(this);
-    add(assign(result, not(result)));
+    ExprNode original = unary.right.accept(this), result = new ExprNode(unary.right.type);
     if (unary.operator.type == Token.Type.MINUS) {
-      add(assign(result, operators.get(unary.type).get(Token.Type.PLUS)
-            + " 1, " + result.register));
-    }
+      add(assign(result, operators.get(unary.type).get(Token.Type.MINUS)
+        + " 0, " + original.register));
+    } else add(assign(result, not(original)));
     return result;
   }
 

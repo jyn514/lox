@@ -30,8 +30,8 @@ enum LoxType {
    *   will return the least class compatible with both (in this case, INT)
    * Comparing types which can be downcast (e.g. DOUBLE, INT) will throw a type error.
    */
-  public static LoxType compareTo(LoxType left, LoxType right) throws TypeError {
-    if (left == null || left == ERROR || left == UNDEFINED) throw new TypeError();
+  private static LoxType compareTo(LoxType left, LoxType right) throws TypeError {
+    if (left == null || right == null || left == ERROR || left == UNDEFINED) throw new TypeError();
     if (left == right) return left;
 
     if (left.ordinal() < END_OF_NUMBERS && right.ordinal() < END_OF_NUMBERS) {

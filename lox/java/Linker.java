@@ -11,7 +11,7 @@ class Linker extends Pass<String, Void> {
 
   @Override
   Void runPass() {
-    ProcessBuilder clang = makeCommand("clang", "-o", "a.out", input);
+    ProcessBuilder clang = makeCommand("clang", "-Wno-override-module", "-o", "a.out", input);
     try {
       clang.start().waitFor();
     } catch (InterruptedException e) {

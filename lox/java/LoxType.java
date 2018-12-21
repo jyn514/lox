@@ -47,7 +47,7 @@ enum LoxType {
     types.put(Token.Type.BOOL, BOOL);
     types.put(Token.Type.INT, INT);
     types.put(Token.Type.DOUBLE, DOUBLE);
-    types.put(Token.Type.STRING, STRING);
+    types.put(Token.Type.STRING_TYPE, STRING);
     types.put(Token.Type.VOID, NULL);
   }
 

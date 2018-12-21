@@ -95,7 +95,7 @@ class Lexer extends Pass<String, List<Token>> {
           while(!atEnd() && advance() != '\n');
           if (previous() == '\n') {
             start = current;
-            return scanToken();
+            return atEnd() ? null : scanToken();
           }
           // atEnd
           return null;

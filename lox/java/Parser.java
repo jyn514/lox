@@ -65,31 +65,31 @@ class Parser extends Pass<List<Token>, List<Stmt>> {
 
   /* funDeclaration :: type identifier "(" ( type identifier "," )* ") block */
   private Stmt.Function funDeclaration(Token type, Token identifier) throws ParseError {
-    final Expr.Symbol func = new Expr.Symbol(identifier, -1,
-      LoxType.get(type.type));
+    final Expr.Symbol func = new Expr.Symbol(-1, identifier, LoxType.get(type.type));
     List<Expr.Symbol> arguments = new ArrayList<>();
     while (match(INT, BOOL, STRING_TYPE, DOUBLE)) {
       type = previous();
-      arguments.add(new Expr.Symbol(consume(IDENTIFIER), -1, LoxType.get(type.type)));
+      arguments.add(new Expr.Symbol(-1, consume(IDENTIFIER), LoxType.get(type.type)));
       if (peek() != null && peek().type != COMMA) break;
       consume(COMMA);
     }
     func.arity = arguments.size();
     consume(RIGHT_PAREN);
     consume(LEFT_BRACE);
-    return new Stmt.Function(func, arguments, block());
+    return new Stmt.Function(func, arguments, block(), type);
   }
 
   /* varDeclaration ::= type identifier ("=" expression)? ";" */
   private Stmt.Var varDeclaration(Token type, Token identifier) throws ParseError {
-    Expr.Symbol variable = new Expr.Symbol(identifier, -1, LoxType.get(type.type));
+    Expr.Symbol variable = new Expr.Symbol(-1, identifier, LoxType.get(type.type));
     Expr.Assign equals = null;
 
     if (match(EQUAL)) {
-      equals = new Expr.Assign(variable, previous(), expression(), variable.type);
+      Token equal = previous();
+      equals = new Expr.Assign(variable, expression(), equal, null);
     }
     consume(SEMICOLON);
-    return new Stmt.Var(variable, equals);
+    return new Stmt.Var(variable, equals, type);
   }
 
   /* statement ::= exprStmt | printStmt | block
@@ -115,13 +115,14 @@ class Parser extends Pass<List<Token>, List<Stmt>> {
   private Stmt.Return returnStatement() throws ParseError {
     Token keyword = previous();
     if (match(SEMICOLON)) {
-      return new Stmt.Return(keyword, null);
+      return new Stmt.Return(null, keyword);
     }
-    return new Stmt.Return(keyword, expressionStatement().expression);
+    return new Stmt.Return(expressionStatement().expression, keyword);
   }
 
   /* block ::= '{' declaration* '}' */
   private Stmt.Block block() throws ParseError {
+    Token leftBrace = previous();
     List<Stmt> statements = new ArrayList<>();
 
     while (!atEnd() && (peek().type != RIGHT_BRACE)) {
@@ -129,7 +130,7 @@ class Parser extends Pass<List<Token>, List<Stmt>> {
     }
 
     consume(RIGHT_BRACE);
-    return new Stmt.Block(statements);
+    return new Stmt.Block(statements, leftBrace);
   }
 
   /* if ::= "if" '(' expression ') statement ( "else" statement )?
@@ -137,6 +138,7 @@ class Parser extends Pass<List<Token>, List<Stmt>> {
    * note that we eagerly find the else, so 'dangling elses'
    * are parsed as if they belonged to the innermost 'if'. */
   private Stmt.If ifStatement() throws ParseError {
+    Token ifKeyword = previous();
     Expr condition = condition();
     Stmt then = statement();
     Stmt otherwise = null;
@@ -144,19 +146,21 @@ class Parser extends Pass<List<Token>, List<Stmt>> {
       otherwise = statement();
     }
 
-    return new Stmt.If(condition, then, otherwise);
+    return new Stmt.If(condition, then, otherwise, ifKeyword);
   }
 
   private Stmt.While whileStatement() throws ParseError {
+    Token whileToken = previous();
     Expr condition = condition();
     Stmt body = statement();
-    return new Stmt.While(condition, body);
+    return new Stmt.While(condition, body, whileToken);
   }
 
   private Stmt forStatement() throws ParseError {
     Stmt declaration = null;
     Expr condition = null;
     Expr after = null;
+    Token forToken = previous();
 
     consume(LEFT_PAREN);
     if (!match(SEMICOLON)) {
@@ -187,28 +191,29 @@ class Parser extends Pass<List<Token>, List<Stmt>> {
      * }
      */
     if (after != null) {
-      body = new Stmt.Block(Arrays.asList(body, new Stmt.Expression(after)));
+      body = new Stmt.Block(Arrays.asList(body, new Stmt.Expression(after, after.token)), body.token);
     }
-    if (condition == null) condition = new Expr.Literal(true, LoxType.BOOL);
-    Stmt.While whileLoop = new Stmt.While(condition, body);
+    if (condition == null) condition = new Expr.Literal(true, null, LoxType.BOOL);
+    Stmt.While whileLoop = new Stmt.While(condition, body, forToken);
 
     if (declaration == null) return whileLoop;
 
-    return new Stmt.Block(Arrays.asList(declaration, whileLoop));
+    return new Stmt.Block(Arrays.asList(declaration, whileLoop), body.token);
   }
 
   /* printStmt ::= "print" expression ";" ; */
   private Stmt.Print printStatement() throws ParseError {
+    Token print = previous();
     Expr value = expression();
     consume(SEMICOLON);
-    return new Stmt.Print(value);
+    return new Stmt.Print(value, print);
   }
 
   /* exprStmt ::= expression ";" ; */
   private Stmt.Expression expressionStatement() throws ParseError {
     Expr value = expression();
     consume(SEMICOLON);
-    return new Stmt.Expression(value);
+    return new Stmt.Expression(value, previous());
   }
 
 
@@ -250,10 +255,10 @@ class Parser extends Pass<List<Token>, List<Stmt>> {
       if (equals.type != EQUAL) {
         Token operation = new Token(enhancedAssignment.get(equals.type),
           equals.lexeme.substring(0, 1), equals.line, equals.column, null);
-        rvalue = new Expr.Binary(lvalue, operation, rvalue, rvalue.type);
+        rvalue = new Expr.Binary(lvalue, rvalue, operation, null);
         equals = new Token(EQUAL, "=", equals.line, equals.column, null);
       }
-      return new Expr.Assign((Expr.Symbol)lvalue, equals, rvalue, rvalue.type);
+      return new Expr.Assign((Expr.Symbol)lvalue, rvalue, equals, null);
     }
     return lvalue;
   }
@@ -299,11 +304,7 @@ class Parser extends Pass<List<Token>, List<Stmt>> {
   private Expr prefixUnary() throws ParseError {
     if (match(BANG, MINUS)) {
       Token operator = previous();
-      Expr expr = prefixUnary();
-
-      if (operator.type == BANG) assertPromotable(LoxType.BOOL, operator, expr.type, LoxType.BOOL);
-      else assertPromotable(LoxType.DOUBLE, operator, expr.type, null);
-      return new Expr.Unary(operator, expr, expr.type);
+      return new Expr.Unary(prefixUnary(), operator, null);
     }
     /*
        if (match(PLUS_PLUS, MINUS_MINUS)) {
@@ -333,15 +334,15 @@ class Parser extends Pass<List<Token>, List<Stmt>> {
   private Expr call() throws ParseError {
     Expr primary = primary();
     while (match(LEFT_PAREN)) {
+      Token left = previous();
       if (!(primary instanceof Expr.Symbol)) {
-        error(previous().line, previous().column, "INTERNAL error: "
+        error(left.line, left.column, "INTERNAL error: "
             + "first class functions and function pointers not implemented");
       } else if (match(RIGHT_PAREN)) {
         // we need to look up the type of this function in the symbol table
-        primary = new Expr.Call((Expr.Symbol)primary, previous(),
-            new ArrayList<>(), null);
+        primary = new Expr.Call((Expr.Symbol)primary, new ArrayList<>(), left, null);
       } else {
-        primary = new Expr.Call((Expr.Symbol)primary, previous(), arguments(), null);
+        primary = new Expr.Call((Expr.Symbol)primary, arguments(), left, null);
         consume(RIGHT_PAREN);
       }
     }
@@ -362,13 +363,13 @@ class Parser extends Pass<List<Token>, List<Stmt>> {
 
   /* primary ::= NUMBER | STRING | "false" | "true" | "null" | "(" expression ")" ; */
   private Expr primary() throws ParseError {
-    if (match(FALSE)) return new Expr.Literal(false, LoxType.BOOL);
-    if (match(TRUE)) return new Expr.Literal(true, LoxType.BOOL);
-    if (match(NULL)) return new Expr.Literal(null, LoxType.NULL);
-    if (match(IDENTIFIER)) return new Expr.Symbol(previous(), -1, null);
+    if (match(FALSE)) return new Expr.Literal(false, previous(), LoxType.BOOL);
+    if (match(TRUE)) return new Expr.Literal(true, previous(), LoxType.BOOL);
+    if (match(NULL)) return new Expr.Literal(null, previous(), LoxType.NULL);
+    if (match(IDENTIFIER)) return new Expr.Symbol(-1, previous(), null);
 
     if (match(NUMBER)) {
-      return new Expr.Literal(previous().value,
+      return new Expr.Literal(previous().value, previous(),
         previous().value instanceof Integer ? LoxType.INT : LoxType.DOUBLE);
     }
 
@@ -377,16 +378,17 @@ class Parser extends Pass<List<Token>, List<Stmt>> {
       if (match(STRING)) {
         value += previous().value;
       }
-      return new Expr.Literal(value, LoxType.STRING);
+      return new Expr.Literal(value, previous(), LoxType.STRING);
     }
 
     // groupings
     if (match(LEFT_PAREN)) {
+      Token left = previous();
       // empty parentheses
-      if (match(RIGHT_PAREN)) return new Expr.Grouping(null, LoxType.UNDEFINED);
+      if (match(RIGHT_PAREN)) return new Expr.Grouping(null, left, null);
       Expr expr = expression();
       consume(RIGHT_PAREN);
-      return new Expr.Grouping(expr, expr.type);
+      return new Expr.Grouping(expr, left, null);
     }
 
     if (peek() == null) {
@@ -436,9 +438,10 @@ class Parser extends Pass<List<Token>, List<Stmt>> {
       // see https://docs.oracle.com/javase/9/docs/api/java/util/Set.html#toArray-T:A-
       assertPromotable(result.type, operator, right.type, max);
       try {
-        result = expected.getDeclaredConstructor(Expr.class, Token.class, Expr.class, LoxType.class)
-          .newInstance(result, operator, right, result.type);
+        result = expected.getDeclaredConstructor(Expr.class, Expr.class, Token.class, LoxType.class)
+          .newInstance(result, right, operator, result.type);
       } catch (ReflectiveOperationException e) {
+        e.printStackTrace();
         throw new ParseError("Illegal operation: " + e.toString());
       }
     }

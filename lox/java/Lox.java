@@ -86,6 +86,10 @@ class Lox {
     }
   }
 
+  static void error(Token token, String message) {
+    error(token.line, token.column, message);
+  }
+
   static void error(int line, int column, String message) {
     errors++;
     System.err.println(filename + ':' + line + ':' + column

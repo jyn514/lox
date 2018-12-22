@@ -226,7 +226,7 @@ class Compiler extends Pass<List<Stmt>, List<String>>
         error(-1, -1, "Cannot print variable which is undefined or has type error");
         return "";
       default:
-        error(-1, -1, "Unknown type to print");
+        error(print.expression.token.line, print.expression.token.column, "Unknown type to print");
     }
     return call;
   }
@@ -246,9 +246,9 @@ class Compiler extends Pass<List<Stmt>, List<String>>
 
   public String visitStmt(Stmt.Var var) {
     // scoping/mangling is handled by Annotate pass
-    ExprNode register = new ExprNode("%" + var.identifier.name.lexeme,
+    ExprNode register = new ExprNode("%" + var.identifier.token.lexeme,
         llvmTypes.get(var.identifier.type) + '*');
-    variables.put(var.identifier.name.lexeme, register);
+    variables.put(var.identifier.token.lexeme, register);
     // store variable on the stack
     add(assign(register, "alloca " +
           register.llvmType.substring(0, register.llvmType.length() - 1)));
@@ -259,11 +259,11 @@ class Compiler extends Pass<List<Stmt>, List<String>>
   public String visitStmt(Stmt.Function func) {
     StringBuilder asm = new StringBuilder();
     asm.append("define ").append(llvmTypes.get(func.identifier.type))
-       .append(" @").append(func.identifier.name.lexeme).append('(');
+       .append(" @").append(func.identifier.token.lexeme).append('(');
 
     for (Expr.Symbol id : func.arguments) {
       asm.append(llvmTypes.get(id.type)).append(' ')
-         .append(id.name.lexeme).append(',');
+         .append(id.token.lexeme).append(',');
     }
     // end of arguments, replace "," with ")"
     if (func.arguments.size() > 0)
@@ -291,7 +291,7 @@ class Compiler extends Pass<List<Stmt>, List<String>>
   }
 
   public ExprNode visitExpr(Expr.Symbol symbol) {
-    ExprNode var = variables.get(symbol.name.lexeme),
+    ExprNode var = variables.get(symbol.token.lexeme),
              value = new ExprNode(var.register + "_tmp" + currentVariables++,
                 var.llvmType.substring(0, var.llvmType.length() - 1));
     add(assign(value, "load " + value.llvmType + ", " + var));
@@ -314,9 +314,9 @@ class Compiler extends Pass<List<Stmt>, List<String>>
              left = expr.left.accept(this),
              cond;
 
-    if (expr.operator.type == Token.Type.OR) {
+    if (expr.token.type == Token.Type.OR) {
       cond = left;
-    } else if (expr.operator.type == Token.Type.AND) {
+    } else if (expr.token.type == Token.Type.AND) {
       cond = new ExprNode(expr.type);
       // cond = !left
       // note that we can't make the condition part of the br
@@ -348,7 +348,7 @@ class Compiler extends Pass<List<Stmt>, List<String>>
 
   public ExprNode visitExpr(Expr.Unary unary) {
     ExprNode original = unary.right.accept(this), result = new ExprNode(unary.right.type);
-    if (unary.operator.type == Token.Type.MINUS) {
+    if (unary.token.type == Token.Type.MINUS) {
       add(assign(result, operators.get(unary.type).get(Token.Type.MINUS)
         + " 0, " + original.register));
     } else add(assign(result, not(original)));
@@ -367,7 +367,7 @@ class Compiler extends Pass<List<Stmt>, List<String>>
       builder.append(result.register).append(" = ");
     }
     builder.append("call ").append(result.llvmType)
-           .append(" @").append(call.callee.name.lexeme).append('(');
+           .append(" @").append(call.callee.token.lexeme).append('(');
 
     for (Expr expr : call.arguments) {
       ExprNode arg = expr.accept(this);
@@ -387,7 +387,7 @@ class Compiler extends Pass<List<Stmt>, List<String>>
 
   public ExprNode visitExpr(Expr.Assign assign) {
     ExprNode value = assign.rvalue.accept(this),
-             lvalue = variables.get(assign.lvalue.name.lexeme);
+             lvalue = variables.get(assign.lvalue.token.lexeme);
     // copy: assign.lvalue = 0 + value
     add("store " + value + ", " + lvalue);
     return value;
@@ -395,11 +395,11 @@ class Compiler extends Pass<List<Stmt>, List<String>>
 
   public String visitStmt(Stmt.LoopControl keyword) {
     if (currentLoop == null) {
-      error(keyword.keyword.line, keyword.keyword.column,
-          "Illegal keyword '" + keyword.keyword.lexeme + "' when not inside a loop");
+      error(keyword.token.line, keyword.token.column,
+          "Illegal keyword '" + keyword.token.lexeme + "' when not inside a loop");
       return "";
     } else {
-      return "br label %" + (keyword.keyword.type == BREAK ?
+      return "br label %" + (keyword.token.type == BREAK ?
           currentLoop.endLabel : currentLoop.startLabel);
     }
   }
@@ -411,10 +411,10 @@ class Compiler extends Pass<List<Stmt>, List<String>>
     ExprNode left = expr.left.accept(this), right = expr.right.accept(this);
 
     // llvm assembly instruction
-    String operation = operators.get(expr.type).get(expr.operator.type);
+    String operation = operators.get(expr.type).get(expr.token.type);
     if (operation == null) {
-      error(expr.operator.line, expr.operator.column,
-          "Illegal operator '" + expr.operator.lexeme + "' for type " + expr.type);
+      error(expr.token.line, expr.token.column,
+          "Illegal operator '" + expr.token.lexeme + "' for type " + expr.type);
     }
     ExprNode result = new ExprNode(expr.type);
 
@@ -424,8 +424,7 @@ class Compiler extends Pass<List<Stmt>, List<String>>
 
   public ExprNode visitExpr(Expr.Literal expr) {
     if (expr.type == LoxType.ERROR || expr.type == LoxType.UNDEFINED) {
-      error(-1, -1, "INTERNAL error: Illegal value '" + expr.value
-          + "', could not resolve type");
+      error(expr.token.line, expr.token.column,"INTERNAL error: could not resolve type of literal expression " + expr);
       return null;
     }
 

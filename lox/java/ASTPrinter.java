@@ -36,7 +36,7 @@ public class ASTPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
   }
 
   public String visitStmt(Stmt.LoopControl stmt) {
-    return parenthesize(stmt.keyword.lexeme);
+    return parenthesize(stmt.token.lexeme);
   }
 
   public String visitStmt(Stmt.Var stmt) {
@@ -48,7 +48,7 @@ public class ASTPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
   }
 
   public String visitExpr(Expr.Binary expr) {
-    return parenthesize(expr.operator.lexeme, expr.left, expr.right);
+    return parenthesize(expr.token.lexeme, expr.left, expr.right);
   }
 
   public String visitExpr(Expr.Grouping expr) {
@@ -60,11 +60,11 @@ public class ASTPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
   }
 
   public String visitExpr(Expr.Unary expr) {
-    return parenthesize(expr.operator.lexeme, expr.right);
+    return parenthesize(expr.token.lexeme, expr.right);
   }
 
   public String visitExpr(Expr.Assign expr) {
-    return parenthesize(expr.equal.lexeme, expr.lvalue, expr.rvalue);
+    return parenthesize(expr.token.lexeme, expr.lvalue, expr.rvalue);
   }
 
   public String visitExpr(Expr.Call expr) {
@@ -73,11 +73,11 @@ public class ASTPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
   }
 
   public String visitExpr(Expr.Logical expr) {
-    return parenthesize(expr.operator.lexeme, expr.left, expr.right);
+    return parenthesize(expr.token.lexeme, expr.left, expr.right);
   }
 
   public String visitExpr(Expr.Symbol expr) {
-    return "(lookup " + expr.name.lexeme + ')';
+    return "(lookup " + expr.token.lexeme + ')';
   }
 
   private String parenthesize(String name, Object ... exprs) {

@@ -8,7 +8,6 @@ import java.util.Map;
 import static java.util.Map.entry;
 import static lox.java.Token.Type.*;
 import static lox.java.Lox.error;
-import static lox.java.LoxType.TypeError;
 
 /*
  * Recursive descent top-down AST parser.
@@ -437,8 +436,6 @@ class Parser extends Pass<List<Token>, List<Stmt>> {
     while (match(input)) {
       Token operator = previous();
       Expr right = function.parse();
-      // see https://docs.oracle.com/javase/9/docs/api/java/util/Set.html#toArray-T:A-
-      assertPromotable(result.type, operator, right.type, max);
       try {
         result = expected.getDeclaredConstructor(Expr.class, Expr.class, Token.class, LoxType.class)
           .newInstance(result, right, operator, result.type);
@@ -448,21 +445,6 @@ class Parser extends Pass<List<Token>, List<Stmt>> {
       }
     }
     return result;
-  }
-
-  private void throwTypeError(LoxType left, Token operator, LoxType right) {
-      error(operator.line, operator.column,
-          "Illegal type for operator '" + operator.type + "': "
-          + left + " and " + right);
-  }
-
-  private void assertPromotable(LoxType left, Token operator,
-                                   LoxType right, LoxType max) {
-    try {
-      LoxType.assertPromotable(left, right, max);
-    } catch (TypeError e) {
-      throwTypeError(left, operator, right);
-    }
   }
 
   /*

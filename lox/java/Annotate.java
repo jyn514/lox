@@ -33,12 +33,20 @@ class Annotate extends Pass<List<Stmt>, List<Stmt>>
   public Void visitStmt(Stmt.Print stmt) { return stmt.expression.accept(this); }
   public Void visitStmt(Stmt.If stmt) {
     stmt.condition.accept(this);
+    if (stmt.condition.type != BOOL) {
+      error(stmt.condition.token.line, stmt.condition.token.column,
+        "Condition for 'if' statement must be boolean; got " + stmt.condition.type);
+    }
     stmt.then.accept(this);
     return stmt.otherwise == null ? null : stmt.otherwise.accept(this);
   }
 
   public Void visitStmt(Stmt.While stmt) {
     stmt.condition.accept(this);
+    if (stmt.condition.type != BOOL) {
+      error(stmt.condition.token.line, stmt.condition.token.column,
+        "Illegal expression type for while condition: expected BOOL, got " + stmt.condition.type);
+    }
     return stmt.body.accept(this);
   }
 
@@ -118,17 +126,65 @@ class Annotate extends Pass<List<Stmt>, List<Stmt>>
     return null;
   }
 
-  public Void visitExpr(Expr.Unary expr) { return expr.right.accept(this); }
+  public Void visitExpr(Expr.Unary expr) {
+    expr.right.accept(this);
+    if (expr.token.type == Token.Type.BANG) {
+      if (expr.right.type != BOOL) {
+        error(expr.token.line, expr.token.column, "Expected boolean expression");
+      } else {
+        expr.type = BOOL;
+      }
+    } else if (expr.token.type == Token.Type.MINUS) {
+      try {
+        if (expr.right.type == BOOL) throw new TypeError();
+        assertPromotable(expr.right.type, DOUBLE, null);
+        expr.type = expr.right.type;
+      } catch (TypeError e) {
+        error(expr.token.line, expr.token.column, "Expected numeric type, got " + expr.right.type);
+      }
+    }
+    return null;
+  }
+
   public Void visitExpr(Expr.Binary expr) {
     expr.left.accept(this);
-    return expr.right.accept(this);
+    expr.right.accept(this);
+    if (expr.token.type == Token.Type.EQUAL_EQUAL) {
+      // TODO: if different types, replace by constant false
+      /*
+      if (expr.left.type != expr.right.type) {
+      }
+      */
+      expr.type = BOOL;
+    } else {
+      try {
+        // TODO: catch max and min types
+        expr.type = assertPromotable(expr.left.type, expr.right.type, null);
+      } catch (TypeError e) {
+        error(expr.token.line, expr.token.column,
+          String.format("Illegal operator %s for types %s and %s", expr.token, expr.left.type, expr.right.type));
+      }
+    }
+    return null;
   }
 
   public Void visitExpr(Expr.Logical expr) {
     expr.left.accept(this);
-    return expr.right.accept(this);
+    expr.right.accept(this);
+    if (expr.left.type != BOOL || expr.right.type != BOOL) {
+      error(expr.token, String.format("Expected boolean expressions, got %s and %s",
+        expr.left.type, expr.right.type));
+    }
+    expr.type = BOOL;
+    return null;
   }
-  public Void visitExpr(Expr.Grouping expr) { return expr.expression.accept(this); }
+
+  public Void visitExpr(Expr.Grouping expr) {
+    expr.expression.accept(this);
+    expr.type = expr.expression.type;
+    return null;
+  }
+
   public Void visitExpr(Expr.Literal expr) { return null; }
 
   public Void visitExpr(Expr.Symbol symbol) {

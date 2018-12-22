@@ -410,13 +410,16 @@ class Parser extends Pass<List<Token>, List<Stmt>> {
 
       switch (peek().type) {
         case CLASS:
-        case FUNCTION:
-        case VAR:
         case FOR:
         case IF:
         case WHILE:
         case PRINT:
         case RETURN:
+        case LEFT_BRACE:
+        case INT:
+        case DOUBLE:
+        case BOOL:
+        case STRING_TYPE:
           return;
       }
 

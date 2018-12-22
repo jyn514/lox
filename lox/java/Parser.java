@@ -361,11 +361,10 @@ class Parser extends Pass<List<Token>, List<Stmt>> {
     return result;
   }
 
-  /* primary ::= NUMBER | STRING | "false" | "true" | "null" | "(" expression ")" ; */
+  /* primary ::= NUMBER | STRING | "false" | "true" | "(" expression ")" ; */
   private Expr primary() throws ParseError {
     if (match(FALSE)) return new Expr.Literal(false, previous(), LoxType.BOOL);
     if (match(TRUE)) return new Expr.Literal(true, previous(), LoxType.BOOL);
-    if (match(NULL)) return new Expr.Literal(null, previous(), LoxType.NULL);
     if (match(IDENTIFIER)) return new Expr.Symbol(-1, previous(), null);
 
     if (match(NUMBER)) {

@@ -47,7 +47,7 @@ class Compiler extends Pass<List<Stmt>, List<String>>
     entry(LoxType.INT, "i32"),
     entry(LoxType.DOUBLE, "double"),
     entry(LoxType.STRING, "i8*"),
-    entry(LoxType.NULL, "void")
+    entry(LoxType.VOID, "void")
   );
 
   private static final Map<LoxType, Map<Token.Type, String>> operators = Map.of(
@@ -193,10 +193,6 @@ class Compiler extends Pass<List<Stmt>, List<String>>
     final ExprNode expr = print.expression.accept(this), printNode = new ExprNode(LoxType.STRING);
 
     switch(print.expression.type) {
-      case NULL:
-        add(assign(printNode, loadStringPointer(PUTS_NULL, 5)));
-        call += "@puts (i8* " + expr.register + ')';
-        break;
       case STRING:
         call += "@puts (i8* " + expr.register + ')';
         break;
@@ -221,10 +217,6 @@ class Compiler extends Pass<List<Stmt>, List<String>>
 
         call += "@puts (" + printNode + ')';
         break;
-      case UNDEFINED:
-      case ERROR:
-        error(-1, -1, "Cannot print variable which is undefined or has type error");
-        return "";
       default:
         error(print.expression.token.line, print.expression.token.column, "Unknown type to print");
     }
@@ -363,7 +355,7 @@ class Compiler extends Pass<List<Stmt>, List<String>>
     ExprNode result = new ExprNode(call.type);
     StringBuilder builder = new StringBuilder();
 
-    if (call.callee.type != LoxType.NULL) {
+    if (call.callee.type != LoxType.VOID) {
       builder.append(result.register).append(" = ");
     }
     builder.append("call ").append(result.llvmType)
@@ -423,7 +415,7 @@ class Compiler extends Pass<List<Stmt>, List<String>>
   }
 
   public ExprNode visitExpr(Expr.Literal expr) {
-    if (expr.type == LoxType.ERROR || expr.type == LoxType.UNDEFINED) {
+    if (expr.type == null) {
       error(expr.token.line, expr.token.column,"INTERNAL error: could not resolve type of literal expression " + expr);
       return null;
     }
@@ -458,9 +450,8 @@ class Compiler extends Pass<List<Stmt>, List<String>>
       add(assign(result, String.format("getelementptr %s, %s* %s, i32 0, i64 0",
               type, type, constant.register)));
       return result;
-    } else if (expr.type == LoxType.NULL) {
-      // TODO: this should be an actual null value
-      // use metadata somehow?
+    } else if (expr.type == LoxType.VOID) {
+      // e.g. print f(); where f is a void function
       add(assign(result, String.format("getelementptr [5 x i8], [5 x i8]* %s, i32 0, i64 0",
               PUTS_NULL)));
       return result;

@@ -4,7 +4,7 @@ import java.util.Map;
 import java.util.HashMap;
 
 enum LoxType {
-  BOOL, INT, DOUBLE, STRING, UNDEFINED, NULL, ERROR;
+  BOOL, INT, DOUBLE, STRING, VOID;
 
   private static final int END_OF_NUMBERS = STRING.ordinal();
 
@@ -20,18 +20,18 @@ enum LoxType {
         throw new TypeError(String.format("Least promoted class %s for types %s and %s is greater than max of %s",
           result, left, right, max));
       }
-      return result;
+    return result;
   }
 
   /*
-   * Comparing ERROR or UNDEFINED will throw a type error.
+   * Comparing null will throw a type error.
    * Comparing incompatible types (e.g. STRING, INT) will throw a type error.
    * Comparing types which can be upcast (e.g. BOOL, INT)
    *   will return the least class compatible with both (in this case, INT)
    * Comparing types which can be downcast (e.g. DOUBLE, INT) will throw a type error.
    */
   private static LoxType compareTo(LoxType left, LoxType right) throws TypeError {
-    if (left == null || right == null || left == ERROR || left == UNDEFINED) throw new TypeError();
+    if (left == null || right == null) throw new TypeError();
     if (left == right) return left;
 
     if (left.ordinal() < END_OF_NUMBERS && right.ordinal() < END_OF_NUMBERS) {
@@ -48,7 +48,7 @@ enum LoxType {
     types.put(Token.Type.INT, INT);
     types.put(Token.Type.DOUBLE, DOUBLE);
     types.put(Token.Type.STRING_TYPE, STRING);
-    types.put(Token.Type.VOID, NULL);
+    types.put(Token.Type.VOID, VOID);
   }
 
   @SuppressWarnings("serial")

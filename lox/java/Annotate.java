@@ -6,11 +6,13 @@ import java.util.HashMap;
 import java.util.Random;
 
 import static lox.java.Lox.error;
+import static lox.java.LoxType.*;
 
 class Annotate extends Pass<List<Stmt>, List<Stmt>>
   implements Stmt.Visitor<Void>, Expr.Visitor<Void> {
   private static final Random rand = new Random();
   private final Map<String, Expr.Symbol> types = new HashMap<>();
+
   private Scope<String> scope = new Scope<>();
   private Stmt.Function currentFunction = null;
   private boolean returnFound = false;
@@ -74,7 +76,6 @@ class Annotate extends Pass<List<Stmt>, List<Stmt>>
     func.body.accept(this);
     if (!returnFound) {
       // automatically return void if user didn't put a return statement
-      if (func.identifier.type == LoxType.NULL) {
       if (func.identifier.type == VOID) {
         func.body.statements.add(new Stmt.Return(null, new Token(
           Token.Type.RETURN, "return", -1, -1, null)));
@@ -108,7 +109,7 @@ class Annotate extends Pass<List<Stmt>, List<Stmt>>
       stmt.value.accept(this);
       actual = stmt.value.type;
     } else {
-      actual = LoxType.NULL;
+      actual = VOID;
     }
     if (actual != currentFunction.identifier.type) {
       error(stmt.token.line, stmt.token.column, "Illegal return type: function declared with type "
@@ -193,8 +194,7 @@ class Annotate extends Pass<List<Stmt>, List<Stmt>>
     symbol.token.lexeme = mangled;
 
     // TODO
-    assert symbol.type != null && symbol.type != LoxType.UNDEFINED
-      && symbol.type != LoxType.ERROR;
+    assert symbol.type != null;
     types.put(mangled, symbol);
   }
 

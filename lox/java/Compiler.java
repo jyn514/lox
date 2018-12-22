@@ -342,7 +342,7 @@ class Compiler extends Pass<List<Stmt>, List<String>>
     ExprNode original = unary.right.accept(this), result = new ExprNode(unary.right.type);
     if (unary.token.type == Token.Type.MINUS) {
       add(assign(result, operators.get(unary.type).get(Token.Type.MINUS)
-        + " 0, " + original.register));
+        + " 0" + (unary.right.type == LoxType.DOUBLE ? ".0, " : ", ") + original.register));
     } else add(assign(result, not(original)));
     return result;
   }

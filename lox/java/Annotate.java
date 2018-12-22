@@ -55,7 +55,15 @@ class Annotate extends Pass<List<Stmt>, List<Stmt>>
   // boilerplate end
 
   public Void visitStmt(Stmt.Var var) {
+    String originalName = var.identifier.token.lexeme;
     create(var.identifier);
+    if (var.equals != null) {
+      // TODO: this is such a hack
+      String mangled = var.identifier.token.lexeme;
+      var.identifier.token.lexeme = originalName;
+      var.equals.accept(this);
+      var.identifier.token.lexeme = mangled;
+    }
     return null;
   }
 

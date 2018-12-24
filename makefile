@@ -39,7 +39,7 @@ clean:
 
 .PHONY: clobber
 clobber: clean
-	rm -f $(GENSRC) jlox tools/__pycache__
+	$(RM) -r $(GENSRC) jlox tools/__pycache__
 
 $(BUILD):
 	mkdir -p $@

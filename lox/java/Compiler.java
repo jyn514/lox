@@ -249,24 +249,31 @@ class Compiler extends Pass<List<Stmt>, List<String>>
   }
 
   public String visitStmt(Stmt.Function func) {
-    StringBuilder asm = new StringBuilder();
+    StringBuilder asm = new StringBuilder(), stores = new StringBuilder();
     asm.append("define ").append(llvmTypes.get(func.identifier.type))
        .append(" @").append(func.identifier.token.lexeme).append('(');
 
     for (Expr.Symbol id : func.arguments) {
-      asm.append(llvmTypes.get(id.type)).append(' ')
-         .append(id.token.lexeme).append(',');
+      ExprNode arg = new ExprNode(id.type);
+      asm.append(arg).append(',');
+
+      String llvmType = llvmTypes.get(id.type);
+      ExprNode ptr = new ExprNode("%" + id.token.lexeme + "_ptr",  llvmType + '*');
+      stores.append(assign(ptr, "alloca " + llvmType + '\n'))
+            .append("store ").append(arg).append(", ").append(ptr);
+      variables.put(id.token.lexeme, ptr);
     }
     // end of arguments, replace "," with ")"
     if (func.arguments.size() > 0)
       asm.setCharAt(asm.length() - 1, ')');
     else asm.append(')');
 
-    // functions need to be top level
+    // functions need to be top level, but they can come at any point in the file
     context++;
 
     add(asm.append(" {").toString());
     add((currentBlock = "funcStart" + currentLabel++) + ':');
+    add(stores.toString());
     add(func.body.accept(this));
     add("}");
 
@@ -355,9 +362,6 @@ class Compiler extends Pass<List<Stmt>, List<String>>
     ExprNode result = new ExprNode(call.type);
     StringBuilder builder = new StringBuilder();
 
-    if (call.callee.type != LoxType.VOID) {
-      builder.append(result.register).append(" = ");
-    }
     builder.append("call ").append(result.llvmType)
            .append(" @").append(call.callee.token.lexeme).append('(');
 
@@ -527,4 +531,3 @@ class Compiler extends Pass<List<Stmt>, List<String>>
     }
   }
 }
-

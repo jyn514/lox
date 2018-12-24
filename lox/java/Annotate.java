@@ -84,12 +84,22 @@ class Annotate extends Pass<List<Stmt>, List<Stmt>>
 
     Stmt.Function oldFunc = currentFunction;
     boolean oldReturn = returnFound;
+    // don't go through Stmt.Block at all
+    Scope<String> oldScope = scope;
+    scope = new Scope<>(scope);
+    // define the arguments in the *current* scope (so you can't define a variable with the same name)
+    for (Expr.Symbol symbol : func.arguments) {
+      create(symbol);
+    }
 
     // push these on the stack
     currentFunction = func;
     returnFound = false;
 
-    func.body.accept(this);
+    for (Stmt stmt : func.body.statements) {
+      stmt.accept(this);
+    }
+
     if (!returnFound) {
       // automatically return void if user didn't put a return statement
       if (func.identifier.type == VOID) {
@@ -105,6 +115,7 @@ class Annotate extends Pass<List<Stmt>, List<Stmt>>
     // pop them off
     currentFunction = oldFunc;
     returnFound = oldReturn;
+    scope = oldScope;
 
     return null;
   }
@@ -242,6 +253,10 @@ class Annotate extends Pass<List<Stmt>, List<Stmt>>
           + ')');
     } else {
       call.type = call.callee.type;
+    }
+
+    for (Expr arg : call.arguments) {
+      arg.accept(this);
     }
 
     return null;

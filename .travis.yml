@@ -1,4 +1,4 @@
-sudo: false
+dist: xenial
 language: java
 jdk: openjdk11
 install: echo no install necessary

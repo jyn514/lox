@@ -447,7 +447,7 @@ class Compiler extends Pass<List<Stmt>, List<String>>
     ExprNode result = new ExprNode(expr.type);
 
     if (expr.type == LoxType.STRING) {
-      String type = String.format("[%d x i8]", expr.value.toString().length() + 1);
+      String type = String.format("[%d x i8]", expr.value.toString().getBytes().length + 1);
 
       add(String.format("%s = %s %s c\"%s\\00\"",
             constant.register, LLVM_CONST, type, expr.value), 0);

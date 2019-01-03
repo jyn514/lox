@@ -1,8 +1,9 @@
-CLASSPATH = libreadline-java.jar$(shell ./sep.sh)$(BUILD)
-JAVAFLAGS = -cp $(CLASSPATH)
-JAVACFLAGS = $(JAVAFLAGS) -Xlint:all -g -target 9 -source 9 -d $(BUILD)
+PWD := $(shell pwd)
 BUILD = build
-MAIN = $(BUILD)/lox/java/Lox.class
+CLASSPATH := $(PWD)/libreadline-java.jar$(shell ./sep.sh)$(PWD)/$(BUILD)
+JAVAFLAGS := -cp $(CLASSPATH)
+JAVACFLAGS := $(JAVAFLAGS) -Xlint:all -g -target 9 -source 9 -d $(BUILD)
+MAIN := $(BUILD)/lox/java/Lox.class
 MAINJ = lox.java.Lox
 GENSRC = lox/java/Stmt.java lox/java/Expr.java
 
@@ -10,7 +11,7 @@ GENSRC = lox/java/Stmt.java lox/java/Expr.java
 all: jlox
 
 jlox: | $(MAIN)
-	printf '#!/bin/sh\ncd "$$(dirname "$$0")" && CLASSPATH=libreadline-java.jar:build java lox.java.Lox "$$@"' > jlox
+	printf '#!/bin/sh\njava $(JAVAFLAGS) lox.java.Lox "$$@"' > jlox
 	chmod +x jlox
 
 $(MAIN): lox/java/*.java $(GENSRC) | $(BUILD)

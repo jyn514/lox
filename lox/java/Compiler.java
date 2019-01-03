@@ -362,7 +362,7 @@ class Compiler extends Pass<List<Stmt>, List<String>>
     ExprNode result = new ExprNode(call.type);
     StringBuilder builder = new StringBuilder();
 
-    builder.append("call ").append(result.llvmType)
+    builder.append(result.register).append(" = call ").append(result.llvmType)
            .append(" @").append(call.callee.token.lexeme).append('(');
 
     for (Expr expr : call.arguments) {

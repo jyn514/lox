@@ -1,7 +1,7 @@
 print "hi";
 print 12;
 print 1.12;
-print null;
+print -1.231;
 print "null";
 print true;
 print false;

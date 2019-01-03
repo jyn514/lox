@@ -29,6 +29,7 @@ class Parser extends Pass<List<Token>, List<Stmt>> {
   );
 
   private int current = 0;
+  private boolean inBlock = false, inFunctionDeclaration = false;
 
   private static final Token.Type[] DECLARATORS = { VOID, INT, BOOL, STRING_TYPE, DOUBLE };
 
@@ -64,6 +65,8 @@ class Parser extends Pass<List<Token>, List<Stmt>> {
 
   /* funDeclaration :: type identifier "(" ( type identifier "," )* ") block */
   private Stmt.Function funDeclaration(Token type, Token identifier) throws ParseError {
+    inFunctionDeclaration = true;
+
     final Expr.Symbol func = new Expr.Symbol(-1, identifier, LoxType.get(type.type));
     List<Expr.Symbol> arguments = new ArrayList<>();
     while (match(INT, BOOL, STRING_TYPE, DOUBLE)) {
@@ -75,6 +78,8 @@ class Parser extends Pass<List<Token>, List<Stmt>> {
     func.arity = arguments.size();
     consume(RIGHT_PAREN);
     consume(LEFT_BRACE);
+
+    inFunctionDeclaration = false;
     return new Stmt.Function(func, arguments, block(), type);
   }
 
@@ -121,11 +126,13 @@ class Parser extends Pass<List<Token>, List<Stmt>> {
 
   /* block ::= '{' declaration* '}' */
   private Stmt.Block block() throws ParseError {
+    inBlock = true;
     Token leftBrace = previous();
     List<Stmt> statements = new ArrayList<>();
 
     while (!atEnd() && (peek().type != RIGHT_BRACE)) {
-      statements.add(declaration());
+      Stmt stmt = declaration();
+      if (stmt != null) statements.add(stmt);
     }
 
     consume(RIGHT_BRACE);
@@ -401,13 +408,19 @@ class Parser extends Pass<List<Token>, List<Stmt>> {
   }
 
   /* panic mode; advance until we're sure the expression is over */
+  @SuppressWarnings("fallthrough")
   private void panic() {
-    advance();
-
     while (!atEnd()) {
-      if (previous().type == SEMICOLON) return;
-
       switch (peek().type) {
+        case RIGHT_BRACE:
+          if (!inBlock) break;
+          return;
+        case INT:
+        case DOUBLE:
+        case STRING_TYPE:
+        case BOOL:
+          if (inFunctionDeclaration) break;
+        case SEMICOLON:
         case CLASS:
         case FOR:
         case IF:
@@ -415,10 +428,6 @@ class Parser extends Pass<List<Token>, List<Stmt>> {
         case PRINT:
         case RETURN:
         case LEFT_BRACE:
-        case INT:
-        case DOUBLE:
-        case BOOL:
-        case STRING_TYPE:
           return;
       }
 
@@ -460,6 +469,7 @@ class Parser extends Pass<List<Token>, List<Stmt>> {
       error(previous().line, previous().column,
           "Expected " + type + "; got "
           + (atEnd() ? "<end-of-file>" : peek().lexeme));
+      panic();
       return null;
     } else return advance();
   }

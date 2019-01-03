@@ -308,16 +308,25 @@ class Parser extends Pass<List<Token>, List<Stmt>> {
 
   /* prefixUnary ::= ( "!" | "-" | "++" | "--" ) prefixUnary | postfixUnary ; */
   private Expr prefixUnary() throws ParseError {
-    if (match(BANG, MINUS)) {
+    if (match(BANG, MINUS, PLUS_PLUS, MINUS_MINUS)) {
       Token operator = previous();
-      return new Expr.Unary(prefixUnary(), operator, null);
+      Expr right = prefixUnary();
+
+      // desugar: x++ == (x = x + 1); --x == (x = x - 1)
+      if (operator.type == PLUS_PLUS || operator.type == MINUS_MINUS) {
+        if (!(right instanceof  Expr.Symbol)) {
+          error(operator, "Can only pre-increment or -decrement variables");
+          return right;
+        }
+        return new Expr.Assign((Expr.Symbol)right,
+          new Expr.Binary(right,
+            new Expr.Literal(1,null, LoxType.INT),
+            new Token(operator.type == PLUS_PLUS ? PLUS : MINUS, operator.lexeme, operator.line, operator.column, null),
+            null), operator, null);
+      }
+
+      return new Expr.Unary(right, operator, null);
     }
-    /*
-       if (match(PLUS_PLUS, MINUS_MINUS)) {
-       boolean plus = previous().type == PLUS_PLUS;
-       return
-       }
-       */
 
     return postfixUnary();
   }

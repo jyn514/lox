@@ -14,7 +14,7 @@ import org.gnu.readline.ReadlineLibrary;
 
 class Lox {
   private static int errors = 0;
-  private static String filename;
+  private static String filename, source;
   // it's times like this that I really wish java had typedefs
   private static final List<Class<? extends Pass<?, ?>>> interactivePasses = List.of(
     Lexer.class, Parser.class, Annotate.class, Compiler.class, Writer.class, Interpreter.class
@@ -43,6 +43,7 @@ class Lox {
 
   private static void run(String input, List<Class<? extends Pass<?, ?>>> passes) {
     // this definitely isn't horrifying at all
+    source = input;
     Object result = input;
     for (Class<? extends Pass<?, ?>> pass : passes) {
       if (errors != 0) return;
@@ -91,9 +92,11 @@ class Lox {
   }
 
   static void error(int line, int column, String message) {
+    // note: line is 1-indexed, column is 0-indexed
     errors++;
-    System.err.println(filename + ':' + line + ':' + column
-        + ": error: " + message);
+    System.err.println(String.format("%s:%d:%d: error: %s", filename, line, column, message));
+    System.err.println(source.split("\n")[line - 1]);
+    System.err.println(repeat(' ', column - 1) + '^');
   }
 
   private static void runFile(String input) {
@@ -127,5 +130,11 @@ class Lox {
       errors = 0;
     }
     System.out.println();
+  }
+
+  // https://stackoverflow.com/a/4903603
+  private static String repeat(char c, int n) {
+    if (n <= 0) return "";
+    return new String(new char[n]).replace('\0', c);
   }
 }

@@ -1,0 +1,28 @@
+program ::= varDeclaration*
+
+varDeclaration ::= type identifier ("=" expression)? ";" | statement
+statement ::= exprStmt | printStmt | while | for | if | block | ';'
+
+exprStmt ::= expression ";"
+printStmt ::= "print" expression ";"
+while ::= "while" condition block
+if ::= "if" condition block
+for ::= "for" '(' varDeclaration exprStmt statement ') statement
+
+condition ::= '(' expression ')'
+block ::= '{' varDeclaration* '}'
+
+expression ::= comma | exprReal
+comma ::= exprReal ',' exprReal
+exprReal ::= assign | or
+assign ::= identifier "=" expression
+or ::= and "or" and
+and ::= equality "and" equality
+equality ::= comparison ( ( "!=" | "==" ) comparison )*
+comparison ::= bitwise ( ( ">" | ">=" | "<" | "<=" ) bitwise )*
+bitwise ::= addition ( ( "^" | "|" | "&" ) addition )*
+addition ::= multiplication ( ( "-" | "+" ) multiplication )*
+multiplication ::= unary ( ( "/" | "*" | "%" ) unary )*
+unary ::= ( "!" | "-" ) unary | primary
+
+primary ::= NUMBER | STRING | "false" | "true" | "null" | "(" expression ")"
